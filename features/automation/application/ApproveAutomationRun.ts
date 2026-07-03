@@ -1,10 +1,23 @@
 import type { AutomationRun } from '@/domain/entities';
-import type { AutomationRepository, ActivityLogRepository } from '@/domain/repositories';
+import type {
+  AutomationRepository,
+  UserRepository,
+  ActivityLogRepository,
+  TaskRepository,
+  ContentRepository,
+  CampaignRepository,
+  SopRepository,
+} from '@/domain/repositories';
 import { executeApprovedRun } from './ExecuteApprovedRun';
 
 interface Dependencies {
   automationRepository: AutomationRepository;
+  userRepository: UserRepository;
   activityLogRepository: ActivityLogRepository;
+  taskRepository: TaskRepository;
+  contentRepository: ContentRepository;
+  campaignRepository: CampaignRepository;
+  sopRepository: SopRepository;
   [key: string]: any;
 }
 

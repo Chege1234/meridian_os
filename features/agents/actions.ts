@@ -154,7 +154,7 @@ export async function runAgentAction(rawInput: RunAgentSchemaInput) {
       {
         agentId: input.agentId,
         userId: actor.id,
-        variables: input.variables,
+        variables: input.variables as Record<string, string>,
       },
       {
         agentRepository,
@@ -166,7 +166,7 @@ export async function runAgentAction(rawInput: RunAgentSchemaInput) {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: err.message, run: undefined };
   }
 }
 

@@ -29,6 +29,9 @@ export async function rejectAgentAction(
     }
 
     const proposedAction = run.proposedActions[actionIndex];
+    if (!proposedAction) {
+      return { success: false, error: 'Proposed action not found.' };
+    }
     if (proposedAction.status !== 'pending') {
       return { success: false, error: `Action is already ${proposedAction.status}.` };
     }

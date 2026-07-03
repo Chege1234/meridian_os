@@ -341,6 +341,7 @@ export default function AnalyticsDashboard() {
             onCancel={() => setIsCustomizing(false)}
             saving={savingLayout}
           />
+        ) : (
           <div className="grid grid-cols-1 gap-6">
             {(pendingAutosCount > 0 || pendingAgentsCount > 0) && (
               <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -3,6 +3,11 @@ import { createServerClient } from '@/infrastructure/supabase';
 import {
   createSupabaseSopRepository,
   createSupabaseAutomationRepository,
+  createSupabaseUserRepository,
+  createSupabaseActivityLogRepository,
+  createSupabaseTaskRepository,
+  createSupabaseContentRepository,
+  createSupabaseCampaignRepository,
 } from '@/infrastructure/repositories';
 import { eventBus } from '@/shared/utils';
 
@@ -20,6 +25,11 @@ export async function GET(request: Request) {
     const supabase = await createServerClient();
     const sopRepository = createSupabaseSopRepository(supabase);
     const automationRepository = createSupabaseAutomationRepository(supabase);
+    const userRepository = createSupabaseUserRepository(supabase);
+    const activityLogRepository = createSupabaseActivityLogRepository(supabase);
+    const taskRepository = createSupabaseTaskRepository(supabase);
+    const contentRepository = createSupabaseContentRepository(supabase);
+    const campaignRepository = createSupabaseCampaignRepository(supabase);
 
     const now = new Date();
     const results: any = {
@@ -92,7 +102,15 @@ export async function GET(request: Request) {
               automationId: auto.id,
               inputSnapshot: { triggeredBy: 'schedule', timestamp: now.toISOString() },
             },
-            { automationRepository }
+            {
+              automationRepository,
+              userRepository,
+              activityLogRepository,
+              taskRepository,
+              contentRepository,
+              campaignRepository,
+              sopRepository,
+            }
           );
           results.scheduledAutomationsTriggered++;
         }

@@ -15,7 +15,7 @@ export const updateAgentSchema = createAgentSchema.partial();
 
 export const runAgentSchema = z.object({
   agentId: z.string().uuid(),
-  variables: z.record(z.string()).default({}),
+  variables: z.record(z.string(), z.string()).default({}),
 });
 
 export const approveAgentActionSchema = z.object({

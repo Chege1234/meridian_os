@@ -1,4 +1,4 @@
-import type { AutomationRun } from '@/domain/entities';
+import type { AutomationRun, ContentPlatform, ContentType } from '@/domain/entities';
 import type {
   AutomationRepository,
   UserRepository,
@@ -108,8 +108,8 @@ export async function executeApprovedRun(
         const result = await createContentItem(
           {
             campaignId: config.campaignId || null,
-            platform: config.platform || 'email',
-            type: config.type || 'newsletter',
+            platform: (config.platform || 'email') as ContentPlatform,
+            type: (config.type || 'email_copy') as ContentType,
             caption: config.caption || null,
             body: config.body || 'Draft body content.',
             authorId: actorId,

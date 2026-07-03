@@ -32,7 +32,7 @@ export const automationActionConfigSchema = z.object({
   body: z.string().optional(),
   caption: z.string().optional(),
   reportType: z.string().optional(),
-  parameters: z.record(z.any()).optional(),
+  parameters: z.record(z.string(), z.any()).optional(),
 });
 
 export const createAutomationSchema = z.object({

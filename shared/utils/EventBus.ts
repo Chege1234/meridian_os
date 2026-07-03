@@ -19,7 +19,7 @@ class EventBus {
     }
     this.listeners[event].push(callback);
     return () => {
-      this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
+      this.listeners[event] = (this.listeners[event] ?? []).filter((cb) => cb !== callback);
     };
   }
 

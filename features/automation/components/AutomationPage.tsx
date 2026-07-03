@@ -637,7 +637,7 @@ export function AutomationPage() {
               <Button type="submit">Save Automation</Button>
             </div>
           </form>
-        </Dialog>
+        </DialogContent>
       </Dialog>
     </div>
   );

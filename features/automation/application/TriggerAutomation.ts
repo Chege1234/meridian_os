@@ -1,11 +1,24 @@
 import type { AutomationRun } from '@/domain/entities';
-import type { AutomationRepository } from '@/domain/repositories';
+import type {
+  AutomationRepository,
+  UserRepository,
+  ActivityLogRepository,
+  TaskRepository,
+  ContentRepository,
+  CampaignRepository,
+  SopRepository,
+} from '@/domain/repositories';
 import { canAutoApprove } from '@/domain/rules/AutomationRules';
 import { executeApprovedRun } from './ExecuteApprovedRun';
 
 interface Dependencies {
   automationRepository: AutomationRepository;
-  // We will pass other dependencies that might be needed by ExecuteApprovedRun
+  userRepository: UserRepository;
+  activityLogRepository: ActivityLogRepository;
+  taskRepository: TaskRepository;
+  contentRepository: ContentRepository;
+  campaignRepository: CampaignRepository;
+  sopRepository: SopRepository;
   [key: string]: any;
 }
 

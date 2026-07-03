@@ -62,7 +62,7 @@ export type {
   UpdateArticleInput,
 } from './KbArticle';
 
-export {
+export type {
   SopStatus,
   SopStep,
   Sop,
