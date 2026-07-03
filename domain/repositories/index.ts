@@ -9,4 +9,8 @@ export type { SettingRepository } from './SettingRepository';
 export type { ContactRepository } from './ContactRepository';
 export type { ContactInteractionRepository } from './ContactInteractionRepository';
 export type { TaskRepository } from './TaskRepository';
+export type { PromptRepository } from './PromptRepository';
+export type { ContentRepository } from './ContentRepository';
+export type { AiConversationRepository } from './AiConversationRepository';
+
 

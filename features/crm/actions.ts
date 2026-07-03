@@ -103,7 +103,7 @@ export async function createContactAction(rawInput: CreateContactSchemaInput) {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, contact: undefined, duplicateWarning: undefined, error: err.message };
   }
 }
 
@@ -129,7 +129,7 @@ export async function updateContactAction(args: {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, contact: undefined, error: err.message };
   }
 }
 

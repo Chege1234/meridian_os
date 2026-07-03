@@ -42,7 +42,7 @@ describe('ContactRules — detectDuplicates', () => {
     const result = detectDuplicates(input, mockContacts);
     expect(result.hasDuplicates).toBe(true);
     expect(result.duplicates).toHaveLength(1);
-    expect(result.duplicates[0].id).toBe('contact-1');
+    expect(result.duplicates?.[0]?.id).toBe('contact-1');
   });
 
   it('should detect duplicate by exact phone (ignoring formatting)', () => {
@@ -53,7 +53,7 @@ describe('ContactRules — detectDuplicates', () => {
     const result = detectDuplicates(input, mockContacts);
     expect(result.hasDuplicates).toBe(true);
     expect(result.duplicates).toHaveLength(1);
-    expect(result.duplicates[0].id).toBe('contact-1');
+    expect(result.duplicates?.[0]?.id).toBe('contact-1');
   });
 
   it('should detect duplicate by name + organization combination', () => {
@@ -64,7 +64,7 @@ describe('ContactRules — detectDuplicates', () => {
     const result = detectDuplicates(input, mockContacts);
     expect(result.hasDuplicates).toBe(true);
     expect(result.duplicates).toHaveLength(1);
-    expect(result.duplicates[0].id).toBe('contact-1');
+    expect(result.duplicates?.[0]?.id).toBe('contact-1');
   });
 
   it('should NOT detect duplicate if organization differs', () => {

@@ -55,7 +55,6 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/content',
     icon: PenTool,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'Media Library',
@@ -89,7 +88,6 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/prompts',
     icon: Sparkles,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'SOP Library',

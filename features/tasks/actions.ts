@@ -78,7 +78,7 @@ export async function createTaskAction(rawInput: CreateTaskSchemaInput) {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, task: undefined, error: err.message };
   }
 }
 
@@ -103,7 +103,7 @@ export async function updateTaskStatusAction(args: {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, task: undefined, error: err.message };
   }
 }
 
@@ -128,7 +128,7 @@ export async function assignTaskAction(args: {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, task: undefined, error: err.message };
   }
 }
 
@@ -149,7 +149,7 @@ export async function archiveTaskAction(taskId: string) {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, task: undefined, error: err.message };
   }
 }
 
