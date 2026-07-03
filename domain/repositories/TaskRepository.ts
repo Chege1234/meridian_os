@@ -10,9 +10,11 @@ export interface TaskRepository {
   findById(id: string): Promise<Task | null>;
   findByAssignedTo(userId: string): Promise<Task[]>;
   findByContactId(contactId: string): Promise<Task[]>;
+  findByCampaignId(campaignId: string): Promise<Task[]>;
   findAll(options?: {
     status?: string;
     priority?: string;
+    campaignId?: string;
     includeDeleted?: boolean;
   }): Promise<Task[]>;
   create(data: CreateTaskInput): Promise<Task>;

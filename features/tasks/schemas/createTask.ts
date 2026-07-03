@@ -27,6 +27,11 @@ export const createTaskSchema = z.object({
     .transform((val) => (val === '' ? null : val))
     .nullable()
     .optional(),
+  campaignId: z
+    .union([z.string().uuid(), z.literal(''), z.null()])
+    .transform((val) => (val === '' ? null : val))
+    .nullable()
+    .optional(),
 });
 
 export type CreateTaskSchemaInput = z.infer<typeof createTaskSchema>;

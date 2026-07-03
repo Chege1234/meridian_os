@@ -12,5 +12,4 @@ export { createSupabaseTaskRepository } from './SupabaseTaskRepository';
 export { createSupabasePromptRepository } from './SupabasePromptRepository';
 export { createSupabaseContentRepository } from './SupabaseContentRepository';
 export { createSupabaseAiConversationRepository } from './SupabaseAiConversationRepository';
-
-
+export { createSupabaseCampaignRepository } from './SupabaseCampaignRepository';

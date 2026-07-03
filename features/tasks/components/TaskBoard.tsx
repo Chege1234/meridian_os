@@ -51,6 +51,7 @@ import {
 interface TaskBoardProps {
   contactId?: string; // Optional: filter tasks by contact
   contactName?: string; // Optional: for dialog display
+  campaignId?: string; // Optional: filter tasks by campaign
 }
 
 const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
@@ -60,7 +61,7 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
   { id: 'completed', label: 'Completed', color: 'border-t-green-500 bg-green-50/20 dark:bg-green-950/10' },
 ];
 
-export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
+export function TaskBoard({ contactId, contactName, campaignId }: TaskBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,10 +79,14 @@ export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
       const usersRes = await getActiveUsersAction();
 
       if (tasksRes.success) {
-        // Filter by contactId if provided
-        const filtered = contactId
-          ? tasksRes.tasks.filter((t) => t.contactId === contactId)
-          : tasksRes.tasks;
+        // Filter by contactId / campaignId if provided
+        let filtered = tasksRes.tasks;
+        if (contactId) {
+          filtered = filtered.filter((t) => t.contactId === contactId);
+        }
+        if (campaignId) {
+          filtered = filtered.filter((t) => t.campaignId === campaignId);
+        }
         setTasks(filtered);
       }
       if (usersRes.success) {
@@ -96,7 +101,7 @@ export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
 
   useEffect(() => {
     loadData();
-  }, [contactId]);
+  }, [contactId, campaignId]);
 
   async function handleCreateTask(e: React.FormEvent) {
     e.preventDefault();
@@ -111,6 +116,7 @@ export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
         description: newDesc,
         priority: newPriority,
         contactId: contactId ?? null,
+        campaignId: campaignId ?? null,
       });
 
       if (res.success && res.task) {
@@ -234,11 +240,13 @@ export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
 
                         {/* Actions Menu */}
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-6 w-6 p-0 shrink-0">
-                              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button variant="ghost" className="h-6 w-6 p-0 shrink-0">
+                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            }
+                          />
                           <DropdownMenuContent align="end" className="w-44">
                             {/* Status transitions */}
                             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Move to</div>
@@ -274,14 +282,16 @@ export function TaskBoard({ contactId, contactName }: TaskBoardProps) {
 
                         {/* Assignee selector */}
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground">
-                              <UserIcon className="h-3 w-3" />
-                              <span className="max-w-[70px] truncate">
-                                {users.find((u) => u.id === task.assignedTo)?.fullName || 'Assign'}
-                              </span>
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button variant="ghost" className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground">
+                                <UserIcon className="h-3 w-3" />
+                                <span className="max-w-[70px] truncate">
+                                  {users.find((u) => u.id === task.assignedTo)?.fullName || 'Assign'}
+                                </span>
+                              </Button>
+                            }
+                          />
                           <DropdownMenuContent align="end" className="max-h-56 overflow-y-auto">
                             <DropdownMenuItem onClick={() => handleAssignUser(task.id, null)} className="text-xs">
                               Unassigned

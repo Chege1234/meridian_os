@@ -48,6 +48,8 @@ async function getAuthenticatedActor(requireWrite = false) {
 export async function getTasksAction(options?: {
   status?: string;
   priority?: string;
+  contactId?: string;
+  campaignId?: string;
 }) {
   try {
     const { supabase } = await getAuthenticatedActor(false);

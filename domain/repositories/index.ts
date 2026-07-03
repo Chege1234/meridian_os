@@ -12,5 +12,4 @@ export type { TaskRepository } from './TaskRepository';
 export type { PromptRepository } from './PromptRepository';
 export type { ContentRepository } from './ContentRepository';
 export type { AiConversationRepository } from './AiConversationRepository';
-
-
+export type { CampaignRepository } from './CampaignRepository';

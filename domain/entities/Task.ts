@@ -18,6 +18,7 @@ export interface Task {
   readonly createdBy: string;
   readonly completedAt: Date | null;
   readonly contactId: string | null;
+  readonly campaignId: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly deletedAt: Date | null;
@@ -33,6 +34,7 @@ export interface CreateTaskInput {
   readonly assignedTo?: string | null;
   readonly createdBy: string;
   readonly contactId?: string | null;
+  readonly campaignId?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -44,4 +46,5 @@ export interface UpdateTaskInput {
   readonly assignedTo?: string | null;
   readonly completedAt?: Date | null;
   readonly contactId?: string | null;
+  readonly campaignId?: string | null;
 }

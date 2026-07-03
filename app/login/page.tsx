@@ -8,11 +8,12 @@
  * Premium, minimal design inspired by Linear/Vercel.
  */
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/infrastructure/supabase/client';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
@@ -126,10 +127,34 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="mt-6 text-center text-sm">
+          <span className="text-muted-foreground">Don't have an account? </span>
+          <Link
+            href="/signup"
+            className="font-medium text-primary hover:underline"
+          >
+            Sign up
+          </Link>
+        </div>
+
         <p className="mt-8 text-center text-xs text-muted-foreground">
           Campus Marketplace · Internal Operations
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

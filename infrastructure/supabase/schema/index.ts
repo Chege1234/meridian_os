@@ -20,5 +20,9 @@ export { contentVersions } from './content-versions';
 export { mediaAssets } from './media-assets';
 export { contentMedia } from './content-media';
 export { aiConversations } from './ai-conversations';
+export { campaigns, campaignStatusEnum } from './campaigns';
+export { campaignContent } from './campaign-content';
+export { campaignContacts, campaignContactRoleEnum } from './campaign-contacts';
+export { campaignMetrics, campaignMetricNameEnum, campaignMetricSourceEnum } from './campaign-metrics';
 
 

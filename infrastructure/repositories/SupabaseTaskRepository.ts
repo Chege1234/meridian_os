@@ -45,9 +45,21 @@ export function createSupabaseTaskRepository(
       return (data ?? []).map(mapToTask);
     },
 
+    async findByCampaignId(campaignId: string): Promise<Task[]> {
+      const { data } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      return (data ?? []).map(mapToTask);
+    },
+
     async findAll(options?: {
       status?: string;
       priority?: string;
+      campaignId?: string;
       includeDeleted?: boolean;
     }): Promise<Task[]> {
       let query = supabase.from('tasks').select('*');
@@ -62,6 +74,10 @@ export function createSupabaseTaskRepository(
 
       if (options?.priority) {
         query = query.eq('priority', options.priority);
+      }
+
+      if (options?.campaignId) {
+        query = query.eq('campaign_id', options.campaignId);
       }
 
       const { data } = await query.order('created_at', { ascending: false });
@@ -79,6 +95,7 @@ export function createSupabaseTaskRepository(
           due_date: data.dueDate ? data.dueDate.toISOString() : null,
           assigned_to: data.assignedTo ?? null,
           contact_id: data.contactId ?? null,
+          campaign_id: data.campaignId ?? null,
           created_by: data.createdBy,
         })
         .select('*')
@@ -104,6 +121,7 @@ export function createSupabaseTaskRepository(
       if (data.assignedTo !== undefined) dbData.assigned_to = data.assignedTo;
       if (data.completedAt !== undefined) dbData.completed_at = data.completedAt ? data.completedAt.toISOString() : null;
       if (data.contactId !== undefined) dbData.contact_id = data.contactId;
+      if (data.campaignId !== undefined) dbData.campaign_id = data.campaignId;
 
       const { data: row } = await supabase
         .from('tasks')
@@ -141,6 +159,7 @@ function mapToTask(row: any): Task {
     createdBy: row.created_by,
     completedAt: row.completed_at ? new Date(row.completed_at) : null,
     contactId: row.contact_id,
+    campaignId: row.campaign_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,

@@ -48,7 +48,6 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/campaigns',
     icon: Megaphone,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'Content Studio',

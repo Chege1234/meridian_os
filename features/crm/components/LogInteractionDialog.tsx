@@ -68,11 +68,13 @@ export function LogInteractionDialog({ contactId, onSuccess }: LogInteractionDia
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1">
-          <Plus className="h-4 w-4" /> Log Activity
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button size="sm" variant="outline" className="gap-1">
+            <Plus className="h-4 w-4" /> Log Activity
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Log Activity</DialogTitle>

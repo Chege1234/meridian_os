@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Search, PenTool, Plus, Kanban, List, Eye, Trash2, Calendar, FileText, Megaphone, Clock } from 'lucide-react';
 import {
@@ -35,6 +36,9 @@ const TYPES: ContentType[] = ['post', 'story', 'reel', 'caption', 'article', 'em
 const STATUSES: ContentStatus[] = ['draft', 'review', 'approved', 'scheduled', 'published', 'archived'];
 
 export function ContentListPage() {
+  const searchParams = useSearchParams();
+  const prefilledCampaignId = searchParams.get('campaignId') || undefined;
+
   const [items, setItems] = useState<ContentItem[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -60,6 +64,7 @@ export function ContentListPage() {
         search: search || undefined,
         status: statusFilter === 'all' ? undefined : statusFilter,
         platform: platformFilter === 'all' ? undefined : platformFilter,
+        campaignId: prefilledCampaignId,
       });
       if (res.success) {
         setItems(res.items);
@@ -75,7 +80,7 @@ export function ContentListPage() {
 
   useEffect(() => {
     loadItems();
-  }, [search, statusFilter, platformFilter]);
+  }, [search, statusFilter, platformFilter, prefilledCampaignId]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +91,7 @@ export function ContentListPage() {
         type: newType,
         caption: newCaption || null,
         body: newBody || null,
+        campaignId: prefilledCampaignId,
       });
 
       if (res.success && res.contentItem) {

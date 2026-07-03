@@ -166,6 +166,7 @@ export async function logInteractionAction(rawInput: LogInteractionSchemaInput) 
     const result = await logInteraction(
       {
         ...input,
+        occurredAt: input.occurredAt ? new Date(input.occurredAt) : undefined,
         userId: actor.id,
       },
       {

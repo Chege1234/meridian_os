@@ -14,5 +14,15 @@ export type { Task, TaskPriority, TaskStatus, CreateTaskInput, UpdateTaskInput }
 export type { Prompt, PromptVersion, CreatePromptInput, UpdatePromptInput, PromptProvider, PromptStatus } from './Prompt';
 export type { ContentItem, ContentVersion, MediaAsset, ContentMedia, CreateContentInput, UpdateContentInput, ContentPlatform, ContentType, ContentStatus } from './ContentItem';
 export type { AiConversation, TokenUsage, CreateAiConversationInput } from './AiConversation';
-
-
+export type {
+  Campaign,
+  CampaignStatus,
+  CampaignContactRole,
+  CampaignMetricName,
+  CampaignMetricSource,
+  CampaignContent,
+  CampaignContact,
+  CampaignMetric,
+  CreateCampaignInput,
+  UpdateCampaignInput,
+} from './Campaign';
