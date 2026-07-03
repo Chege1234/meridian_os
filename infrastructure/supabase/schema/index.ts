@@ -17,8 +17,11 @@ export { prompts } from './prompts';
 export { promptVersions } from './prompt-versions';
 export { contentItems } from './content-items';
 export { contentVersions } from './content-versions';
-export { mediaAssets } from './media-assets';
+export { mediaFolders } from './media-folders';
+export { mediaAssets, mediaAssetStatusEnum } from './media-assets';
 export { contentMedia } from './content-media';
+export { brandAssets, brandAssetTypeEnum } from './brand-assets';
+export { brandGuidelines } from './brand-guidelines';
 export { aiConversations } from './ai-conversations';
 export { campaigns, campaignStatusEnum } from './campaigns';
 export { campaignContent } from './campaign-content';
@@ -26,5 +29,3 @@ export { campaignContacts, campaignContactRoleEnum } from './campaign-contacts';
 export { campaignMetrics, campaignMetricNameEnum, campaignMetricSourceEnum } from './campaign-metrics';
 export { dashboards } from './dashboards';
 export { savedReports, reportTypeEnum } from './saved-reports';
-
-

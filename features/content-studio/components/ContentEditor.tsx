@@ -22,10 +22,12 @@ import {
   Tag,
   ArrowRight,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Image,
+  X
 } from 'lucide-react';
 import { Button, Input, Badge, Card, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui';
-import type { ContentItem, ContentVersion, Prompt } from '@/domain/entities';
+import type { ContentItem, ContentVersion, Prompt, MediaAsset } from '@/domain/entities';
 import {
   getContentDetailAction,
   updateContentItemAction,
@@ -33,6 +35,12 @@ import {
   generateContentAction
 } from '../actions';
 import { getPromptsAction } from '@/features/prompt-library/actions';
+import { MediaPickerModal } from '@/features/media-library/components/MediaPickerModal';
+import {
+  getMediaForContentAction,
+  attachMediaToContentAction,
+  detachMediaFromContentAction,
+} from '@/features/media-library/actions';
 
 interface ContentEditorProps {
   contentId: string;
@@ -63,6 +71,10 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
   // Selected past version for modal
   const [viewingVersion, setViewingVersion] = useState<ContentVersion | null>(null);
 
+  // Media attachments
+  const [attachedMedia, setAttachedMedia] = useState<MediaAsset[]>([]);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+
   async function loadDetails() {
     try {
       const res = await getContentDetailAction(contentId);
@@ -84,6 +96,15 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
     }
   }
 
+  async function loadAttachedMedia() {
+    try {
+      const res = await getMediaForContentAction(contentId);
+      if (res.success) setAttachedMedia(res.assets);
+    } catch {
+      // Non-critical failure
+    }
+  }
+
   async function loadActivePrompts() {
     try {
       const res = await getPromptsAction({ status: 'active' });
@@ -100,6 +121,7 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
       setLoading(true);
       await loadDetails();
       await loadActivePrompts();
+      await loadAttachedMedia();
       setLoading(false);
     }
     init();
@@ -439,6 +461,70 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
                 </div>
               )}
 
+              {/* Media Attachments Panel */}
+              <div className="space-y-2 pt-2 border-t border-border/40">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                    Attached Media
+                  </label>
+                  {item?.status !== 'archived' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      onClick={() => setShowMediaPicker(true)}
+                    >
+                      <Image className="h-3 w-3" />
+                      Attach Media
+                    </Button>
+                  )}
+                </div>
+                {attachedMedia.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {attachedMedia.map((media) => (
+                      <div
+                        key={media.id}
+                        className="group relative flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5"
+                      >
+                        {media.mimeType.startsWith('image/') ? (
+                          <img
+                            src={media.storagePath}
+                            alt={media.altText || media.filename}
+                            className="h-6 w-6 rounded object-cover"
+                          />
+                        ) : (
+                          <FileEdit className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span className="text-xs text-foreground truncate max-w-[120px]">
+                          {media.filename}
+                        </span>
+                        {item?.status !== 'archived' && (
+                          <button
+                            type="button"
+                            className="opacity-0 group-hover:opacity-100 text-destructive/60 hover:text-destructive transition-opacity"
+                            onClick={async () => {
+                              await detachMediaFromContentAction({
+                                contentItemId: contentId,
+                                mediaId: media.id,
+                              });
+                              loadAttachedMedia();
+                              toast.success('Media detached.');
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground italic">
+                    No media attached. Click "Attach Media" to add files from the Media Library.
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-1.5 pt-2">
                 <label htmlFor="content-summary" className="text-xs font-semibold text-foreground uppercase tracking-wider block">
                   Version Summary / Save Note
@@ -687,6 +773,27 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
           </DialogContent>
         </Dialog>
       )}
+      {/* Media Picker Modal */}
+      <MediaPickerModal
+        open={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={async (asset) => {
+          try {
+            const res = await attachMediaToContentAction({
+              contentItemId: contentId,
+              mediaId: asset.id,
+            });
+            if (res.success) {
+              toast.success(`Attached "${asset.filename}".`);
+              loadAttachedMedia();
+            } else {
+              toast.error(res.error || 'Failed to attach media.');
+            }
+          } catch {
+            toast.error('Failed to attach media.');
+          }
+        }}
+      />
     </div>
   );
 }

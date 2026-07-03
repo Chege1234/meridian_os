@@ -12,7 +12,7 @@ export type { Contact, ContactStatus, CreateContactInput, UpdateContactInput } f
 export type { ContactInteraction, InteractionType, LogInteractionInput } from './ContactInteraction';
 export type { Task, TaskPriority, TaskStatus, CreateTaskInput, UpdateTaskInput } from './Task';
 export type { Prompt, PromptVersion, CreatePromptInput, UpdatePromptInput, PromptProvider, PromptStatus } from './Prompt';
-export type { ContentItem, ContentVersion, MediaAsset, ContentMedia, CreateContentInput, UpdateContentInput, ContentPlatform, ContentType, ContentStatus } from './ContentItem';
+export type { ContentItem, ContentVersion, ContentMedia, CreateContentInput, UpdateContentInput, ContentPlatform, ContentType, ContentStatus } from './ContentItem';
 export type { AiConversation, TokenUsage, CreateAiConversationInput } from './AiConversation';
 export type {
   Campaign,
@@ -29,3 +29,25 @@ export type {
 
 export type { Dashboard, CreateDashboardInput, UpdateDashboardInput, DashboardWidget, WidgetType } from './Dashboard';
 export type { SavedReport, CreateSavedReportInput, ReportType } from './SavedReport';
+export type {
+  MediaAsset,
+  MediaFolder,
+  MediaAssetStatus,
+  CreateMediaAssetInput,
+  UpdateMediaAssetInput,
+  CreateMediaFolderInput,
+  DuplicateAssetResult,
+} from './MediaAsset';
+export type {
+  BrandAsset,
+  BrandGuideline,
+  BrandAssetType,
+  BrandAssetValue,
+  ColorPaletteValue,
+  FontValue,
+  LogoValue,
+  CreateBrandAssetInput,
+  UpdateBrandAssetInput,
+  PublishBrandGuidelineInput,
+  ActiveBrandKit,
+} from './BrandAsset';

@@ -26,4 +26,12 @@ export type {
   CrmActivitySummary,
   AiUsageCost,
 } from './AnalyticsRepository';
-
+export type {
+  MediaRepository,
+  MediaFolderRepository,
+  MediaSearchOptions,
+} from './MediaRepository';
+export type {
+  BrandAssetRepository,
+  BrandGuidelineRepository,
+} from './BrandRepository';

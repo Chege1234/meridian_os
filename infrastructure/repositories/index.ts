@@ -16,4 +16,5 @@ export { createSupabaseCampaignRepository } from './SupabaseCampaignRepository';
 export { createSupabaseDashboardRepository } from './SupabaseDashboardRepository';
 export { createSupabaseSavedReportRepository } from './SupabaseSavedReportRepository';
 export { createSupabaseAnalyticsRepository } from './SupabaseAnalyticsRepository';
-
+export { createSupabaseMediaRepository, createSupabaseMediaFolderRepository } from './SupabaseMediaRepository';
+export { createSupabaseBrandAssetRepository, createSupabaseBrandGuidelineRepository } from './SupabaseBrandRepository';

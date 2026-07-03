@@ -60,14 +60,12 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/media',
     icon: Image,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'Brand Center',
     href: '/brand',
     icon: Palette,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'CRM',

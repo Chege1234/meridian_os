@@ -232,6 +232,15 @@ function mapToMediaAsset(row: any): MediaAsset {
     size: row.size || 0,
     uploadedBy: row.uploaded_by,
     checksum: row.checksum,
+    altText: row.alt_text ?? null,
+    tags: row.tags ?? [],
+    folderId: row.folder_id ?? null,
+    width: row.width ?? null,
+    height: row.height ?? null,
+    duration: row.duration ?? null,
+    status: row.status ?? 'active',
     createdAt: new Date(row.created_at),
+    deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
+    deletedBy: row.deleted_by ?? null,
   };
 }

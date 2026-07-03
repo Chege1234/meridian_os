@@ -55,17 +55,6 @@ export interface ContentVersion {
   readonly createdAt: Date;
 }
 
-export interface MediaAsset {
-  readonly id: string;
-  readonly filename: string;
-  readonly storagePath: string;
-  readonly mimeType: string;
-  readonly size: number;
-  readonly uploadedBy: string;
-  readonly checksum: string;
-  readonly createdAt: Date;
-}
-
 export interface ContentMedia {
   readonly contentItemId: string;
   readonly mediaId: string;
