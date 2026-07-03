@@ -51,3 +51,23 @@ export type {
   PublishBrandGuidelineInput,
   ActiveBrandKit,
 } from './BrandAsset';
+
+export type {
+  KbArticleStatus,
+  KbCategory,
+  KbArticle,
+  KbArticleVersion,
+  CreateCategoryInput,
+  CreateArticleInput,
+  UpdateArticleInput,
+} from './KbArticle';
+
+export type {
+  SopStatus,
+  SopStep,
+  Sop,
+  SopVersion,
+  CreateSopInput,
+  UpdateSopInput,
+} from './Sop';
+

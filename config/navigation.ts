@@ -38,10 +38,9 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   },
   {
     label: 'Knowledge Base',
-    href: '/knowledge',
+    href: '/knowledge-base',
     icon: BookOpen,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'Campaign Center',
@@ -91,8 +90,8 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/sops',
     icon: FileText,
     section: 'main',
-    disabled: true,
   },
+
 
   /* Workspace Section */
   {

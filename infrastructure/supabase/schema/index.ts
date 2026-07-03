@@ -29,3 +29,7 @@ export { campaignContacts, campaignContactRoleEnum } from './campaign-contacts';
 export { campaignMetrics, campaignMetricNameEnum, campaignMetricSourceEnum } from './campaign-metrics';
 export { dashboards } from './dashboards';
 export { savedReports, reportTypeEnum } from './saved-reports';
+export { kbCategories } from './kb-categories';
+export { kbArticles, kbArticleVersions, kbArticleStatusEnum } from './kb-articles';
+export { sops, sopVersions, sopStatusEnum } from './sops';
+

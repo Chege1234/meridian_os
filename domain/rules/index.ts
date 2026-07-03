@@ -18,3 +18,6 @@ export {
 export { isValidTransition as isValidTaskTransition } from './TaskRules';
 export * from './MediaRules';
 export * from './BrandRules';
+export * from './KbRules';
+export * from './SopRules';
+

@@ -18,3 +18,7 @@ export { createSupabaseSavedReportRepository } from './SupabaseSavedReportReposi
 export { createSupabaseAnalyticsRepository } from './SupabaseAnalyticsRepository';
 export { createSupabaseMediaRepository, createSupabaseMediaFolderRepository } from './SupabaseMediaRepository';
 export { createSupabaseBrandAssetRepository, createSupabaseBrandGuidelineRepository } from './SupabaseBrandRepository';
+export { createSupabaseKbCategoryRepository } from './SupabaseKbCategoryRepository';
+export { createSupabaseKbArticleRepository } from './SupabaseKbArticleRepository';
+export { createSupabaseSopRepository } from './SupabaseSopRepository';
+

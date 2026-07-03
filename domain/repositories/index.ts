@@ -35,3 +35,8 @@ export type {
   BrandAssetRepository,
   BrandGuidelineRepository,
 } from './BrandRepository';
+
+export type { KbCategoryRepository } from './KbCategoryRepository';
+export type { KbArticleRepository } from './KbArticleRepository';
+export type { SopRepository } from './SopRepository';
+
