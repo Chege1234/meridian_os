@@ -10,3 +10,7 @@ export { permissions } from './permissions';
 export { rolePermissions } from './role-permissions';
 export { activityLogs } from './activity-logs';
 export { settings, settingTypeEnum } from './settings';
+export { contacts } from './contacts';
+export { contactInteractions, contactInteractionTypeEnum } from './contact-interactions';
+export { tasks, taskPriorityEnum, taskStatusEnum } from './tasks';
+

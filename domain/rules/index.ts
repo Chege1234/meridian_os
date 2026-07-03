@@ -22,3 +22,8 @@ export {
   isValidSettingValue,
   SETTING_KEYS,
 } from './SettingRules';
+
+export { detectDuplicates } from './ContactRules';
+export type { DuplicateCheckInput } from './ContactRules';
+export { isValidTransition as isValidTaskTransition } from './TaskRules';
+

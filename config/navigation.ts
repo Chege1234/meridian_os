@@ -76,7 +76,6 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     href: '/crm',
     icon: Users,
     section: 'main',
-    disabled: true,
   },
   {
     label: 'Analytics',
