@@ -7,3 +7,4 @@
 
 export * from './ui';
 export * from './layout';
+export { DateRangePicker } from './DateRangePicker';

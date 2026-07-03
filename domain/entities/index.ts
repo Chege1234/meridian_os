@@ -26,3 +26,6 @@ export type {
   CreateCampaignInput,
   UpdateCampaignInput,
 } from './Campaign';
+
+export type { Dashboard, CreateDashboardInput, UpdateDashboardInput, DashboardWidget, WidgetType } from './Dashboard';
+export type { SavedReport, CreateSavedReportInput, ReportType } from './SavedReport';

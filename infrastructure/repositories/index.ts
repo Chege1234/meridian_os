@@ -13,3 +13,7 @@ export { createSupabasePromptRepository } from './SupabasePromptRepository';
 export { createSupabaseContentRepository } from './SupabaseContentRepository';
 export { createSupabaseAiConversationRepository } from './SupabaseAiConversationRepository';
 export { createSupabaseCampaignRepository } from './SupabaseCampaignRepository';
+export { createSupabaseDashboardRepository } from './SupabaseDashboardRepository';
+export { createSupabaseSavedReportRepository } from './SupabaseSavedReportRepository';
+export { createSupabaseAnalyticsRepository } from './SupabaseAnalyticsRepository';
+

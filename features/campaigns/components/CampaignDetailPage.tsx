@@ -34,6 +34,17 @@ import {
   Plus,
 } from 'lucide-react';
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend,
+} from 'recharts';
+
+import {
   Button,
   Card,
   CardContent,
@@ -142,6 +153,33 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   useEffect(() => {
     loadDetail();
   }, [campaignId]);
+
+  // Helper to pivot metrics for the chart
+  const chartData = (() => {
+    const pivotMap: Record<string, { date: string; reach: number; clicks: number; conversions: number; signups: number; revenue: number }> = {};
+    metrics.forEach((m) => {
+      const dateStr = new Date(m.recordedAt).toISOString().split('T')[0] ?? '';
+      if (!pivotMap[dateStr]) {
+        pivotMap[dateStr] = {
+          date: dateStr,
+          reach: 0,
+          clicks: 0,
+          conversions: 0,
+          signups: 0,
+          revenue: 0,
+        };
+      }
+      const val = Number(m.value) || 0;
+      const name = m.metricName;
+      const entry = pivotMap[dateStr]!;
+      if (name === 'reach') entry.reach += val;
+      else if (name === 'clicks') entry.clicks += val;
+      else if (name === 'conversions') entry.conversions += val;
+      else if (name === 'signups') entry.signups += val;
+      else if (name === 'revenue') entry.revenue += val;
+    });
+    return Object.values(pivotMap).sort((a, b) => a.date.localeCompare(b.date));
+  })();
 
   // Load content items for Attach dialog
   async function loadAllContent() {
@@ -833,66 +871,101 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
               </CardContent>
             </Card>
 
-            {/* Right Card: Metrics List Table */}
-            <Card className="md:col-span-2 border border-border/80 bg-card p-5">
-              <div className="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Recorded Metrics Log</h3>
-                <Badge variant="outline" className="text-[10px] text-muted-foreground">Immutable Audit Trail</Badge>
+            {/* Right Card: Performance Chart + Log Table */}
+            <Card className="md:col-span-2 border border-border/80 bg-card p-5 space-y-6">
+              <div>
+                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Campaign Performance Chart</h3>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">Aggregated Metrics</Badge>
+                </div>
+
+                {chartData.length === 0 ? (
+                  <div className="text-center py-12">
+                    <TrendingUp className="h-8 w-8 text-muted-foreground/35 mx-auto" />
+                    <h4 className="mt-2 text-xs font-semibold text-foreground">No metrics recorded yet</h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Use the form on the left to record campaign performance.</p>
+                  </div>
+                ) : (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
+                        <ChartTooltip
+                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }}
+                          labelStyle={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'bold' }}
+                          itemStyle={{ fontSize: '11px' }}
+                        />
+                        <ChartLegend wrapperStyle={{ fontSize: '10px', marginTop: '10px' }} />
+                        <Line type="monotone" dataKey="reach" name="Reach" stroke="#38bdf8" strokeWidth={1.5} dot={false} />
+                        <Line type="monotone" dataKey="clicks" name="Clicks" stroke="#818cf8" strokeWidth={1.5} dot={false} />
+                        <Line type="monotone" dataKey="conversions" name="Conversions" stroke="#fb7185" strokeWidth={1.5} dot={false} />
+                        <Line type="monotone" dataKey="revenue" name="Revenue ($)" stroke="#34d399" strokeWidth={1.5} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
 
-              {metrics.length === 0 ? (
-                <div className="text-center py-12">
-                  <TrendingUp className="h-8 w-8 text-muted-foreground/35 mx-auto" />
-                  <h4 className="mt-2 text-xs font-semibold text-foreground">No metrics recorded yet</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Use the inline form to record the first metric.</p>
+              <div>
+                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Recorded Metrics Log</h3>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">Immutable Audit Trail</Badge>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-border/80 overflow-hidden bg-card">
-                  <Table>
-                    <TableHeader className="bg-muted/40">
-                      <TableRow>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Metric</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Value</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Source</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recorded At</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {metrics.map((metric) => (
-                        <TableRow key={metric.id} className="hover:bg-muted/10 border-b border-border/40">
-                          <TableCell className="capitalize text-xs font-semibold flex items-center gap-1.5">
-                            {metric.metricName === 'revenue' ? (
-                              <DollarSign className="h-3.5 w-3.5 text-green-500" />
-                            ) : (
-                              <Activity className="h-3.5 w-3.5 text-blue-500" />
-                            )}
-                            {metric.metricName}
-                          </TableCell>
-                          <TableCell className="text-xs font-medium">
-                            {metric.metricName === 'revenue'
-                              ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(metric.value)
-                              : new Intl.NumberFormat('en-US').format(metric.value)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize text-[10px] px-2 py-0 border-border/60">
-                              {metric.source}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {new Date(metric.recordedAt).toLocaleString(undefined, {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </TableCell>
+
+                {metrics.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-muted-foreground">
+                    No individual logs recorded yet.
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-border/80 overflow-hidden bg-card max-h-60 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                        <TableRow>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Metric</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Value</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Source</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recorded At</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+                      </TableHeader>
+                      <TableBody>
+                        {metrics.map((metric) => (
+                          <TableRow key={metric.id} className="hover:bg-muted/10 border-b border-border/40">
+                            <TableCell className="capitalize text-xs font-semibold flex items-center gap-1.5">
+                              {metric.metricName === 'revenue' ? (
+                                <DollarSign className="h-3.5 w-3.5 text-green-500" />
+                              ) : (
+                                <Activity className="h-3.5 w-3.5 text-blue-500" />
+                              )}
+                              {metric.metricName}
+                            </TableCell>
+                            <TableCell className="text-xs font-medium">
+                              {metric.metricName === 'revenue'
+                                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(metric.value)
+                                : new Intl.NumberFormat('en-US').format(metric.value)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize text-[10px] px-2 py-0 border-border/60">
+                                {metric.source}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {new Date(metric.recordedAt).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         )}

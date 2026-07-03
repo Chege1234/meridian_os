@@ -24,5 +24,7 @@ export { campaigns, campaignStatusEnum } from './campaigns';
 export { campaignContent } from './campaign-content';
 export { campaignContacts, campaignContactRoleEnum } from './campaign-contacts';
 export { campaignMetrics, campaignMetricNameEnum, campaignMetricSourceEnum } from './campaign-metrics';
+export { dashboards } from './dashboards';
+export { savedReports, reportTypeEnum } from './saved-reports';
 
 

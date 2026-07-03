@@ -13,3 +13,17 @@ export type { PromptRepository } from './PromptRepository';
 export type { ContentRepository } from './ContentRepository';
 export type { AiConversationRepository } from './AiConversationRepository';
 export type { CampaignRepository } from './CampaignRepository';
+export type { DashboardRepository } from './DashboardRepository';
+export type { SavedReportRepository } from './SavedReportRepository';
+export type {
+  AnalyticsRepository,
+  CampaignPerformanceMetric,
+  ContentPerformance,
+  ContentStatusFunnel,
+  ContentVolumeByPlatform,
+  ContentVolumeByAuthor,
+  ContentAgingInReview,
+  CrmActivitySummary,
+  AiUsageCost,
+} from './AnalyticsRepository';
+
