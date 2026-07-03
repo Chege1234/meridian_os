@@ -39,4 +39,7 @@ export type {
 export type { KbCategoryRepository } from './KbCategoryRepository';
 export type { KbArticleRepository } from './KbArticleRepository';
 export type { SopRepository } from './SopRepository';
+export type { AutomationRepository } from './AutomationRepository';
+export type { AgentRepository } from './AgentRepository';
+
 

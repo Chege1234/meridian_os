@@ -20,4 +20,7 @@ export * from './MediaRules';
 export * from './BrandRules';
 export * from './KbRules';
 export * from './SopRules';
+export * as AutomationRules from './AutomationRules';
+export * as AgentRules from './AgentRules';
+
 

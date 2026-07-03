@@ -33,6 +33,10 @@ import {
   runSavedReportAction,
   deleteSavedReportAction,
 } from '../actions';
+import { getAutomationRunsAction } from '@/features/automation/actions';
+import { getAgentRunsAction } from '@/features/agents/actions';
+import Link from 'next/link';
+
 
 const DEFAULT_RANGE: DateRange = {
   startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '', // 30 days ago
@@ -56,6 +60,30 @@ export default function AnalyticsDashboard() {
   const [contentData, setContentData] = useState<any>(null);
   const [crmData, setCrmData] = useState<any>(null);
   const [aiData, setAiData] = useState<any[]>([]);
+
+  // Approvals State
+  const [pendingAutosCount, setPendingAutosCount] = useState(0);
+  const [pendingAgentsCount, setPendingAgentsCount] = useState(0);
+
+  // Fetch pending approvals counts
+  useEffect(() => {
+    async function loadApprovals() {
+      try {
+        const autoRes = await getAutomationRunsAction({ status: 'pending_approval' });
+        if (autoRes.success && autoRes.runs) {
+          setPendingAutosCount(autoRes.runs.length);
+        }
+        const agentRes = await getAgentRunsAction({ status: 'pending_approval' });
+        if (agentRes.success && agentRes.runs) {
+          setPendingAgentsCount(agentRes.runs.length);
+        }
+      } catch (err) {
+        console.warn('Failed to load pending approvals counts for analytics:', err);
+      }
+    }
+    loadApprovals();
+  }, []);
+
 
   // Load Dashboards & Reports Lists on Mount
   useEffect(() => {
@@ -313,9 +341,42 @@ export default function AnalyticsDashboard() {
             onCancel={() => setIsCustomizing(false)}
             saving={savingLayout}
           />
-        ) : (
           <div className="grid grid-cols-1 gap-6">
+            {(pendingAutosCount > 0 || pendingAgentsCount > 0) && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded text-amber-500 shrink-0">
+                    <Settings className="h-5 w-5 animate-spin" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-400">Pending Approvals Queue</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      You have {pendingAutosCount} rule-based runs and {pendingAgentsCount} agent-proposed runs staged waiting for confirmation.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {pendingAutosCount > 0 && (
+                    <Link
+                      href="/automation"
+                      className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-semibold"
+                    >
+                      Review Automations
+                    </Link>
+                  )}
+                  {pendingAgentsCount > 0 && (
+                    <Link
+                      href="/agents"
+                      className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-semibold"
+                    >
+                      Review AI Agents
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
             {/* Render Widgets Grid */}
+
             {activeLayout
               .sort((a, b) => a.position - b.position)
               .map((widget) => {

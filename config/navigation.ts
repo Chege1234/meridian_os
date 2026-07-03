@@ -17,8 +17,11 @@ import {
   BarChart3,
   Sparkles,
   FileText,
+  Cpu,
+  Bot,
   type LucideIcon,
 } from 'lucide-react';
+
 
 export interface NavigationItem {
   readonly label: string;
@@ -91,6 +94,18 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     icon: FileText,
     section: 'main',
   },
+  {
+    label: 'Automation Center',
+    href: '/automation',
+    icon: Cpu,
+    section: 'main',
+  },
+  {
+    label: 'AI Agents',
+    href: '/agents',
+    icon: Bot,
+    section: 'main',
+  },
 
 
   /* Workspace Section */
@@ -101,3 +116,4 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     section: 'workspace',
   },
 ] as const;
+

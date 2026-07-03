@@ -43,6 +43,13 @@
       "when": 1783078203374,
       "tag": "0005_marvelous_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783081751385,
+      "tag": "0006_marvelous_marvel_zombies",
+      "breakpoints": true
     }
   ]
 }

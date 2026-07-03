@@ -1,0 +1,75 @@
+import type { AgentRun } from '@/domain/entities';
+import type { AgentRepository, ActivityLogRepository } from '@/domain/repositories';
+
+interface Dependencies {
+  agentRepository: AgentRepository;
+  activityLogRepository: ActivityLogRepository;
+}
+
+interface Result {
+  success: boolean;
+  run?: AgentRun;
+  error?: string;
+}
+
+export async function approveAgentAction(
+  args: { runId: string; actionId: string; actorId: string },
+  deps: Dependencies,
+): Promise<Result> {
+  try {
+    const run = await deps.agentRepository.findRunById(args.runId);
+    if (!run) {
+      return { success: false, error: 'Agent run not found.' };
+    }
+
+    // Find the proposed action
+    const actionIndex = run.proposedActions.findIndex((a) => a.id === args.actionId);
+    if (actionIndex === -1) {
+      return { success: false, error: 'Proposed action not found in this run.' };
+    }
+
+    const proposedAction = run.proposedActions[actionIndex];
+    if (proposedAction.status !== 'pending') {
+      return { success: false, error: `Action is already ${proposedAction.status}.` };
+    }
+
+    // Create a new proposedActions array with the updated action status
+    const updatedProposedActions = [...run.proposedActions];
+    updatedProposedActions[actionIndex] = {
+      ...proposedAction,
+      status: 'approved',
+    };
+
+    // Update the run in database
+    const updated = await deps.agentRepository.updateRun(run.id, {
+      proposedActions: updatedProposedActions,
+    });
+
+    if (!updated) {
+      return { success: false, error: 'Failed to approve proposed action.' };
+    }
+
+    // Log the activity (BR-1202)
+    await deps.activityLogRepository.create({
+      userId: args.actorId,
+      action: 'agent.action_approve',
+      module: 'agents',
+      entity: 'agent_run',
+      entityId: updated.id,
+      metadata: {
+        actionId: args.actionId,
+        actionType: proposedAction.type,
+      },
+    });
+
+    return {
+      success: true,
+      run: updated,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Failed to approve agent action.',
+    };
+  }
+}

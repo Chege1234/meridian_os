@@ -10,6 +10,8 @@
 import type { ContentItem, ContentStatus } from '@/domain/entities';
 import type { ContentRepository, ActivityLogRepository } from '@/domain/repositories';
 import { validateStatusTransition } from '@/domain/rules/ContentRules';
+import { eventBus } from '@/shared/utils';
+
 
 interface Dependencies {
   contentRepository: ContentRepository;
@@ -74,10 +76,24 @@ export async function transitionContentStatus(
       },
     });
 
+    // Emit event (Section 8 Orchestration)
+    if (args.status === 'published') {
+      eventBus.emit('content.published', {
+        id: updated.id,
+        campaignId: updated.campaignId,
+        platform: updated.platform,
+        type: updated.type,
+        actorId: args.actorId,
+      }).catch((err) => {
+        console.error('Failed to emit content.published event:', err);
+      });
+    }
+
     return {
       success: true,
       contentItem: updated,
     };
+
   } catch (err: any) {
     return {
       success: false,

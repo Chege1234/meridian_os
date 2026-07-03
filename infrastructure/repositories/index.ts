@@ -21,4 +21,7 @@ export { createSupabaseBrandAssetRepository, createSupabaseBrandGuidelineReposit
 export { createSupabaseKbCategoryRepository } from './SupabaseKbCategoryRepository';
 export { createSupabaseKbArticleRepository } from './SupabaseKbArticleRepository';
 export { createSupabaseSopRepository } from './SupabaseSopRepository';
+export { createSupabaseAutomationRepository } from './SupabaseAutomationRepository';
+export { createSupabaseAgentRepository } from './SupabaseAgentRepository';
+
 

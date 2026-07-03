@@ -62,7 +62,7 @@ export type {
   UpdateArticleInput,
 } from './KbArticle';
 
-export type {
+export {
   SopStatus,
   SopStep,
   Sop,
@@ -71,3 +71,29 @@ export type {
   UpdateSopInput,
 } from './Sop';
 
+export type {
+  AutomationTriggerType,
+  AutomationTriggerConfig,
+  AutomationActionType,
+  AutomationActionConfig,
+  AutomationStatus,
+  Automation,
+  AutomationRunStatus,
+  AutomationRun,
+  CreateAutomationInput,
+  UpdateAutomationInput,
+  CreateAutomationRunInput,
+} from './Automation';
+
+export type {
+  AgentStatus,
+  AgentRunTrigger,
+  AgentRunStatus,
+  AgentProposedAction,
+  AgentExecutedAction,
+  Agent,
+  AgentRun,
+  CreateAgentInput,
+  UpdateAgentInput,
+  CreateAgentRunInput,
+} from './Agent';

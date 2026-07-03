@@ -8,6 +8,8 @@
 import type { Campaign, CampaignStatus } from '@/domain/entities';
 import type { CampaignRepository, ActivityLogRepository } from '@/domain/repositories';
 import { validateStatusTransition } from '@/domain/rules/CampaignRules';
+import { eventBus } from '@/shared/utils';
+
 
 interface Dependencies {
   campaignRepository: CampaignRepository;
@@ -75,10 +77,22 @@ export async function transitionCampaignStatus(
       },
     });
 
+    // Emit event (Section 8 Orchestration)
+    eventBus.emit('campaign.status_changed', {
+      id: updated.id,
+      name: updated.name,
+      from: existing.status,
+      to: updated.status,
+      actorId: args.actorId,
+    }).catch((err) => {
+      console.error('Failed to emit campaign.status_changed event:', err);
+    });
+
     return {
       success: true,
       campaign: updated,
     };
+
   } catch (err: any) {
     return {
       success: false,

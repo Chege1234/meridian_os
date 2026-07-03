@@ -32,4 +32,20 @@ export { savedReports, reportTypeEnum } from './saved-reports';
 export { kbCategories } from './kb-categories';
 export { kbArticles, kbArticleVersions, kbArticleStatusEnum } from './kb-articles';
 export { sops, sopVersions, sopStatusEnum } from './sops';
+export {
+  automations,
+  automationRuns,
+  automationTriggerTypeEnum,
+  automationActionTypeEnum,
+  automationStatusEnum,
+  automationRunStatusEnum,
+} from './automations';
+export {
+  agents,
+  agentRuns,
+  agentStatusEnum,
+  agentRunTriggerEnum,
+  agentRunStatusEnum,
+} from './agents';
+
 
