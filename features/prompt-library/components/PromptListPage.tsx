@@ -45,7 +45,7 @@ export function PromptListPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPromptText, setNewPromptText] = useState('');
-  const [newProvider, setNewProvider] = useState<'openai' | 'anthropic' | 'google'>('openai');
+  const [newProvider, setNewProvider] = useState<'openai' | 'anthropic' | 'google' | 'nvidia'>('openai');
   const [creating, setCreating] = useState(false);
 
   // Selected prompt for editing
@@ -271,6 +271,7 @@ export function PromptListPage() {
                     <option value="openai">OpenAI (GPT)</option>
                     <option value="anthropic">Anthropic (Claude)</option>
                     <option value="google">Google (Gemini)</option>
+                    <option value="nvidia">NVIDIA (GLM-5.2)</option>
                   </select>
                 </div>
               </div>

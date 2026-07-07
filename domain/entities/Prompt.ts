@@ -4,7 +4,7 @@
  * Core Prompt Library entity types. Framework-independent.
  */
 
-export type PromptProvider = 'openai' | 'anthropic' | 'google';
+export type PromptProvider = 'openai' | 'anthropic' | 'google' | 'nvidia';
 export type PromptStatus = 'draft' | 'active' | 'deprecated';
 
 export interface Prompt {

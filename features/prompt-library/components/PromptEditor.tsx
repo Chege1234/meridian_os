@@ -30,7 +30,7 @@ export function PromptEditor({ promptId, onClose }: PromptEditorProps) {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [promptText, setPromptText] = useState('');
-  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'google'>('openai');
+  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'google' | 'nvidia'>('openai');
   const [status, setStatus] = useState<'draft' | 'active' | 'deprecated'>('draft');
   const [versionSummary, setVersionSummary] = useState('');
   const [saving, setSaving] = useState(false);
@@ -213,6 +213,7 @@ export function PromptEditor({ promptId, onClose }: PromptEditorProps) {
                   <option value="openai">OpenAI (GPT)</option>
                   <option value="anthropic">Anthropic (Claude)</option>
                   <option value="google">Google (Gemini)</option>
+                  <option value="nvidia">NVIDIA (GLM-5.2)</option>
                 </select>
               </div>
 

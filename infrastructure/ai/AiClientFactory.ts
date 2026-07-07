@@ -9,10 +9,11 @@
 import { OpenAiAdapter } from './OpenAiAdapter';
 import { AnthropicAdapter } from './AnthropicAdapter';
 import { GoogleGeminiAdapter } from './GoogleGeminiAdapter';
+import { NvidiaAdapter } from './NvidiaAdapter';
 import type { AiClient } from './AiClient';
 
 /**
- * @param provider - Provider name: 'openai' | 'anthropic' | 'google'
+ * @param provider - Provider name: 'openai' | 'anthropic' | 'google' | 'nvidia'
  * @param apiKey   - Optional decrypted API key injected by CredentialResolver.
  *                   Omit to fall back to environment variables (local dev mode).
  */
@@ -31,6 +32,10 @@ export function createAiClient(provider: string, apiKey?: string): AiClient {
     return new GoogleGeminiAdapter(apiKey);
   }
 
-  throw new Error(`Unsupported AI provider: "${provider}". Expected 'openai', 'anthropic', or 'google'.`);
+  if (p === 'nvidia') {
+    return new NvidiaAdapter(apiKey);
+  }
+
+  throw new Error(`Unsupported AI provider: "${provider}". Expected 'openai', 'anthropic', 'google', or 'nvidia'.`);
 }
 export type { AiClient, AiCompletionOptions, AiCompletionResponse } from './AiClient';
