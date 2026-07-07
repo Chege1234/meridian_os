@@ -59,6 +59,22 @@ async function getAdminActor() {
   return { actor, supabase };
 }
 
+function formatError(err: unknown): string {
+  if (err instanceof Error) {
+    let msg = err.message;
+    const anyErr = err as any;
+    if (anyErr.cause?.message) {
+      msg += ` | Cause: ${anyErr.cause.message}`;
+    }
+    if (Array.isArray(anyErr.errors) && anyErr.errors.length > 0) {
+      const sub = anyErr.errors.map((e: any) => e.message || String(e)).join(', ');
+      msg += ` | Sub-errors: ${sub}`;
+    }
+    return msg;
+  }
+  return String(err);
+}
+
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
@@ -70,11 +86,16 @@ type ActionResult<T> =
 export async function getProviderCredentials(): Promise<ActionResult<ProviderCredential[]>> {
   try {
     await getAdminActor();
+    const dbHost = process.env.DATABASE_URL ? process.env.DATABASE_URL.split('@')[1]?.split(':')[0] : 'not set';
+    console.log('Server Action getProviderCredentials -> DATABASE_URL Host:', dbHost);
+
     const credentialRepository = createSupabaseProviderCredentialRepository();
     const data = await listProviderCredentials({ credentialRepository });
     return { success: true, data };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to load credentials.' };
+    const msg = formatError(err);
+    console.error('getProviderCredentials action failed:', msg);
+    return { success: false, error: msg };
   }
 }
 
@@ -99,7 +120,7 @@ export async function addProviderCredential(
     );
     return { success: true, data };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to create credential.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
@@ -122,7 +143,7 @@ export async function setCredentialPriority(
     await updateCredentialPriority(id, parsed.data.priority, { credentialRepository });
     return { success: true, data: undefined };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to update priority.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
@@ -145,7 +166,7 @@ export async function setCredentialStatus(
     await updateCredentialStatus(id, parsed.data.status, { credentialRepository });
     return { success: true, data: undefined };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to update status.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
@@ -160,7 +181,7 @@ export async function removeProviderCredential(id: string): Promise<ActionResult
     await deleteProviderCredential(id, actor.id, { credentialRepository });
     return { success: true, data: undefined };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to delete credential.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
@@ -175,7 +196,7 @@ export async function runHealthCheck(): Promise<ActionResult<unknown>> {
     const result = await triggerFullHealthCheck({ credentialRepository });
     return { success: true, data: result };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Health check failed.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
@@ -186,7 +207,7 @@ export async function retrySingleCredential(id: string): Promise<ActionResult<un
     const result = await triggerSingleHealthCheck(id, { credentialRepository });
     return { success: true, data: result };
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Retry failed.' };
+    return { success: false, error: formatError(err) };
   }
 }
 
