@@ -97,3 +97,13 @@ export type {
   UpdateAgentInput,
   CreateAgentRunInput,
 } from './Agent';
+
+export type {
+  CredentialProvider,
+  CredentialStatus,
+  CredentialModelTier,
+  ProviderCredential,
+  ProviderCredentialWithKey,
+  CreateProviderCredentialInput,
+  UpdateCredentialStatusInput,
+} from './ProviderCredential';

@@ -8,6 +8,7 @@
 import { pgTable, uuid, varchar, text, jsonb, numeric, timestamp, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { prompts } from './prompts';
+import { providerCredentials } from './provider-credentials';
 
 export const aiConversations = pgTable(
   'ai_conversations',
@@ -27,6 +28,11 @@ export const aiConversations = pgTable(
       totalTokens: number;
     }>(),
     estimatedCost: numeric('estimated_cost', { precision: 10, scale: 6 }),
+
+    // Which provider credential produced this response.
+    // Null for legacy rows created before credential management was introduced.
+    credentialId: uuid('credential_id').references(() => providerCredentials.id),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -35,5 +41,6 @@ export const aiConversations = pgTable(
     index('idx_ai_conversations_user_id').on(table.userId),
     index('idx_ai_conversations_provider').on(table.provider),
     index('idx_ai_conversations_created_at').on(table.createdAt),
+    index('idx_ai_conversations_credential_id').on(table.credentialId),
   ],
 );

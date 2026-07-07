@@ -143,7 +143,15 @@ describe('Automation Integration Flow', () => {
         automationId: 'auto-123',
         inputSnapshot: { campaignId: 'camp-123' },
       },
-      { automationRepository: automationRepo }
+      {
+        automationRepository: automationRepo,
+        userRepository: userRepo,
+        activityLogRepository: activityLogRepo,
+        taskRepository: taskRepo,
+        contentRepository: contentRepo,
+        campaignRepository: campaignRepo,
+        sopRepository: sopRepo,
+      }
     );
 
     expect(result.success).toBe(true);

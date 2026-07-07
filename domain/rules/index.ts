@@ -22,5 +22,4 @@ export * from './KbRules';
 export * from './SopRules';
 export * as AutomationRules from './AutomationRules';
 export * as AgentRules from './AgentRules';
-
-
+export * as CredentialRules from './CredentialRules';

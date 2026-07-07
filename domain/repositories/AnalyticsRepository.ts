@@ -65,7 +65,9 @@ export interface AiUsageCost {
   readonly totalTokens: number;
   readonly estimatedCost: number;
   readonly userName: string;
+  readonly credentialLabel?: string | null;
 }
+
 
 export interface AnalyticsRepository {
   getCampaignPerformance(

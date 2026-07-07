@@ -57,6 +57,7 @@ export function createSupabaseAiConversationRepository(
             totalTokens: data.tokenUsage.totalTokens,
           } : null,
           estimated_cost: data.estimatedCost !== undefined ? String(data.estimatedCost) : null,
+          credential_id: data.credentialId ?? null,
         })
         .select('*')
         .single();
@@ -86,6 +87,7 @@ function mapToAiConversation(row: any): AiConversation {
       totalTokens: Number(row.token_usage.totalTokens || 0),
     } : null,
     estimatedCost: row.estimated_cost ? Number(row.estimated_cost) : null,
+    credentialId: row.credential_id ?? null,
     createdAt: new Date(row.created_at),
   };
 }

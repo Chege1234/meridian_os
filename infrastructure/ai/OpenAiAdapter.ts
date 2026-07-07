@@ -10,8 +10,13 @@ import type { AiClient, AiCompletionOptions, AiCompletionResponse } from './AiCl
 export class OpenAiAdapter implements AiClient {
   private readonly apiKey: string | undefined;
 
-  constructor() {
-    this.apiKey = process.env.OPENAI_API_KEY;
+  /**
+   * @param apiKey - Injected decrypted API key from CredentialResolver.
+   *                 Falls back to OPENAI_API_KEY env var for local dev
+   *                 when no database credentials have been configured yet.
+   */
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey ?? process.env.OPENAI_API_KEY;
   }
 
   async complete(

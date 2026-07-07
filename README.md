@@ -79,6 +79,19 @@ pnpm test:e2e       # Run Playwright E2E tests
 
 ---
 
+## 🔐 AI Credential Encryption & Failover
+
+Meridian OS secures third-party AI provider keys (OpenAI, Anthropic, Gemini) using database-backed, AES-256-GCM encrypted storage:
+
+1. **Master Encryption Key:** Stored only in the `CREDENTIAL_ENCRYPTION_KEY` environment variable. Must be exactly 32 bytes (64 hex characters). Generate a new one with:
+   ```bash
+   openssl rand -hex 32
+   ```
+2. **Encrypted Storage:** Keys are encrypted on the server before insertion and stored as `iv:authTag:ciphertext` in PostgreSQL. They are never exposed in log lines, client code, or API responses.
+3. **Decryption & Failover:** The `CredentialResolver` fetches active credentials for the requested provider/tier, decrypts them in-memory, and injects them into the provider adapters at call time. It handles 401/403/429 failures automatically, marking credentials appropriately and attempting the next active key.
+
+---
+
 ## 📐 Engineering Guidelines
 
 - **No `any`:** Strict TypeScript is enabled and enforced.

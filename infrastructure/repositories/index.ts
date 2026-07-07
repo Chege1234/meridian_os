@@ -23,5 +23,4 @@ export { createSupabaseKbArticleRepository } from './SupabaseKbArticleRepository
 export { createSupabaseSopRepository } from './SupabaseSopRepository';
 export { createSupabaseAutomationRepository } from './SupabaseAutomationRepository';
 export { createSupabaseAgentRepository } from './SupabaseAgentRepository';
-
-
+export { createSupabaseProviderCredentialRepository } from './SupabaseProviderCredentialRepository';

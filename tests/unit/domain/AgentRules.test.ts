@@ -22,8 +22,9 @@ describe('AgentRules — validateProposedActions', () => {
     const proposed = [{ type: 'generate_content_draft', config: { title: 'Test' } }];
     const validated = validateProposedActions(allowed, proposed);
     expect(validated).toHaveLength(1);
-    expect(validated[0].status).toBe('pending');
-    expect(validated[0].error).toBeUndefined();
+    expect(validated[0]).toBeDefined();
+    expect(validated[0]!.status).toBe('pending');
+    expect(validated[0]!.error).toBeUndefined();
   });
 
   it('should filter out and automatically reject non-whitelisted actions before approval queue', () => {
@@ -33,8 +34,10 @@ describe('AgentRules — validateProposedActions', () => {
     ];
     const validated = validateProposedActions(allowed, proposed);
     expect(validated).toHaveLength(2);
-    expect(validated[0].status).toBe('pending');
-    expect(validated[1].status).toBe('rejected');
-    expect(validated[1].error).toContain('Violates agent allowed_actions whitelist');
+    expect(validated[0]).toBeDefined();
+    expect(validated[1]).toBeDefined();
+    expect(validated[0]!.status).toBe('pending');
+    expect(validated[1]!.status).toBe('rejected');
+    expect(validated[1]!.error).toContain('Violates agent allowed_actions whitelist');
   });
 });

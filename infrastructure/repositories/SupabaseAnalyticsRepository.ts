@@ -17,7 +17,9 @@ import {
   users,
   prompts,
   activityLogs,
+  providerCredentials,
 } from '@/infrastructure/supabase/schema';
+
 
 import { eq, and, gte, lte, isNull, sql, inArray } from 'drizzle-orm';
 import type {
@@ -363,6 +365,7 @@ export function createSupabaseAnalyticsRepository(): AnalyticsRepository {
           model: aiConversations.model,
           promptTitle: sql<string>`coalesce(${prompts.title}, 'Inline Prompt')`,
           userName: users.fullName,
+          credentialLabel: sql<string>`coalesce(${providerCredentials.label}, 'Legacy/Static Key')`,
           conversationCount: sql<number>`count(*)`,
           totalTokens: sql<number>`sum(cast(${aiConversations.tokenUsage}->>'totalTokens' as integer))`,
           estimatedCost: sql<number>`sum(${aiConversations.estimatedCost})`,
@@ -370,12 +373,14 @@ export function createSupabaseAnalyticsRepository(): AnalyticsRepository {
         .from(aiConversations)
         .innerJoin(users, eq(aiConversations.userId, users.id))
         .leftJoin(prompts, eq(aiConversations.promptId, prompts.id))
+        .leftJoin(providerCredentials, eq(aiConversations.credentialId, providerCredentials.id))
         .where(whereClause)
         .groupBy(
           aiConversations.provider,
           aiConversations.model,
           sql`coalesce(${prompts.title}, 'Inline Prompt')`,
-          users.fullName
+          users.fullName,
+          sql`coalesce(${providerCredentials.label}, 'Legacy/Static Key')`
         );
 
       return rows.map((row) => ({
@@ -386,7 +391,9 @@ export function createSupabaseAnalyticsRepository(): AnalyticsRepository {
         totalTokens: Number(row.totalTokens) || 0,
         estimatedCost: Number(row.estimatedCost) || 0,
         userName: row.userName || 'Unknown',
+        credentialLabel: row.credentialLabel,
       }));
     },
   };
 }
+

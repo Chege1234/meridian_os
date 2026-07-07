@@ -41,5 +41,4 @@ export type { KbArticleRepository } from './KbArticleRepository';
 export type { SopRepository } from './SopRepository';
 export type { AutomationRepository } from './AutomationRepository';
 export type { AgentRepository } from './AgentRepository';
-
-
+export type { ProviderCredentialRepository } from './ProviderCredentialRepository';

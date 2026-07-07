@@ -10,8 +10,12 @@ import type { AiClient, AiCompletionOptions, AiCompletionResponse } from './AiCl
 export class AnthropicAdapter implements AiClient {
   private readonly apiKey: string | undefined;
 
-  constructor() {
-    this.apiKey = process.env.ANTHROPIC_API_KEY;
+  /**
+   * @param apiKey - Injected decrypted API key from CredentialResolver.
+   *                 Falls back to ANTHROPIC_API_KEY env var for local dev.
+   */
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey ?? process.env.ANTHROPIC_API_KEY;
   }
 
   async complete(

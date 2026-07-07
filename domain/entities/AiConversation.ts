@@ -20,6 +20,8 @@ export interface AiConversation {
   readonly response: string;
   readonly tokenUsage: TokenUsage | null;
   readonly estimatedCost: number | null;
+  // Which provider_credentials row served this request. Null for legacy rows.
+  readonly credentialId?: string | null;
   readonly createdAt: Date;
 }
 
@@ -32,4 +34,5 @@ export interface CreateAiConversationInput {
   readonly response: string;
   readonly tokenUsage?: TokenUsage | null;
   readonly estimatedCost?: number | null;
+  readonly credentialId?: string | null;
 }
