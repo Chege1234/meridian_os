@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import { addProviderCredential } from '../actions';
-import type { ProviderCredential } from '@/domain/entities';
+import type { ProviderCredential, CredentialProvider } from '@/domain/entities';
 
 interface Props {
   open: boolean;
@@ -25,15 +25,16 @@ const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'google', label: 'Google Gemini' },
+  { value: 'nvidia', label: 'NVIDIA (GLM-5.2)' },
 ] as const;
 
 const TIERS = [
-  { value: 'flagship', label: 'Flagship (GPT-4o / Claude Sonnet / Gemini Pro)' },
-  { value: 'fast', label: 'Fast (GPT-4o-mini / Claude Haiku / Gemini Flash)' },
+  { value: 'flagship', label: 'Flagship (GPT-4o / Claude Sonnet / Gemini Pro / GLM-5.2)' },
+  { value: 'fast', label: 'Fast (GPT-4o-mini / Claude Haiku / Gemini Flash / GLM-5.2)' },
 ] as const;
 
 const INITIAL_FORM = {
-  provider: 'openai' as const,
+  provider: 'openai' as CredentialProvider,
   label: '',
   rawKey: '',
   priority: 10,

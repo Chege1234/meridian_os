@@ -34,7 +34,7 @@ import type { AiConversationRepository } from '@/domain/repositories';
 import type { CredentialProvider, CredentialModelTier } from '@/domain/entities';
 import { CredentialRules } from '@/domain/rules';
 
-const PROVIDER_ORDER: CredentialProvider[] = ['openai', 'anthropic', 'google'];
+const PROVIDER_ORDER: CredentialProvider[] = ['openai', 'anthropic', 'google', 'nvidia'];
 
 // Default retry-after when the provider returns no header (5 minutes)
 const DEFAULT_RATE_LIMIT_RESET_MS = 5 * 60 * 1000;

@@ -20,7 +20,7 @@ export function canManageCredentials(roleName: string): boolean {
 }
 
 /** Valid provider values matching the database enum. */
-const VALID_PROVIDERS: CredentialProvider[] = ['openai', 'anthropic', 'google'];
+const VALID_PROVIDERS: CredentialProvider[] = ['openai', 'anthropic', 'google', 'nvidia'];
 
 export function isValidProvider(value: string): value is CredentialProvider {
   return (VALID_PROVIDERS as string[]).includes(value);
@@ -80,6 +80,16 @@ export function validateKeyFormat(
     }
   }
 
+  if (provider === 'nvidia') {
+    // NVIDIA keys start with "nvapi-"
+    if (!trimmed.startsWith('nvapi-')) {
+      return 'NVIDIA API keys must start with "nvapi-".';
+    }
+    if (trimmed.length < 20) {
+      return 'NVIDIA API key appears too short.';
+    }
+  }
+
   return null; // valid
 }
 
@@ -108,6 +118,7 @@ export function getDefaultModel(
     openai: { flagship: 'gpt-4o', fast: 'gpt-4o-mini' },
     anthropic: { flagship: 'claude-sonnet-4-5', fast: 'claude-haiku-3-5' },
     google: { flagship: 'gemini-2.0-flash', fast: 'gemini-2.0-flash-lite' },
+    nvidia: { flagship: 'z-ai/glm-5.2', fast: 'z-ai/glm-5.2' },
   };
   return defaults[provider][tier];
 }

@@ -28,6 +28,7 @@ export const credentialProviderEnum = pgEnum('credential_provider', [
   'openai',
   'anthropic',
   'google',
+  'nvidia',
 ]);
 
 export const credentialStatusEnum = pgEnum('credential_status', [

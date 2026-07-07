@@ -27,6 +27,7 @@ describe('CredentialRules — isValidProvider', () => {
     expect(isValidProvider('openai')).toBe(true);
     expect(isValidProvider('anthropic')).toBe(true);
     expect(isValidProvider('google')).toBe(true);
+    expect(isValidProvider('nvidia')).toBe(true);
   });
 
   it('should reject invalid providers', () => {
@@ -67,6 +68,11 @@ describe('CredentialRules — validateKeyFormat', () => {
     expect(validateKeyFormat('google', 'AIzaSy12345678901234567890')).toBeNull();
     expect(validateKeyFormat('google', 'key-12345')).toContain('start with "AIza"');
   });
+
+  it('should validate NVIDIA keys starting with nvapi-', () => {
+    expect(validateKeyFormat('nvidia', 'nvapi-proj12345678901234567890')).toBeNull();
+    expect(validateKeyFormat('nvidia', 'key-12345')).toContain('start with "nvapi-"');
+  });
 });
 
 describe('CredentialRules — validatePriority', () => {
@@ -90,5 +96,7 @@ describe('CredentialRules — getDefaultModel', () => {
     expect(getDefaultModel('openai', 'fast')).toBe('gpt-4o-mini');
     expect(getDefaultModel('anthropic', 'flagship')).toBe('claude-sonnet-4-5');
     expect(getDefaultModel('google', 'fast')).toBe('gemini-2.0-flash-lite');
+    expect(getDefaultModel('nvidia', 'flagship')).toBe('z-ai/glm-5.2');
+    expect(getDefaultModel('nvidia', 'fast')).toBe('z-ai/glm-5.2');
   });
 });

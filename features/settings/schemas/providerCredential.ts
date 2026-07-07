@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 
-const providerEnum = z.enum(['openai', 'anthropic', 'google']);
+const providerEnum = z.enum(['openai', 'anthropic', 'google', 'nvidia']);
 
 const modelTierEnum = z.enum(['flagship', 'fast']);
 

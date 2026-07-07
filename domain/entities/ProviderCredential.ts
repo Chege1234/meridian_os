@@ -11,7 +11,7 @@
  *   It is only used server-side inside the CredentialResolver.
  */
 
-export type CredentialProvider = 'openai' | 'anthropic' | 'google';
+export type CredentialProvider = 'openai' | 'anthropic' | 'google' | 'nvidia';
 export type CredentialStatus = 'active' | 'rate_limited' | 'disabled' | 'error';
 export type CredentialModelTier = 'flagship' | 'fast';
 
