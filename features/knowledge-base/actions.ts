@@ -129,12 +129,14 @@ export async function getArticleDetailAction(articleId: string) {
     const { supabase } = await getAuthenticatedActor(false);
     const articleRepository = createSupabaseKbArticleRepository(supabase);
 
-    const article = await articleRepository.findById(articleId);
+    const [article, versions] = await Promise.all([
+      articleRepository.findById(articleId),
+      articleRepository.findVersionHistory(articleId),
+    ]);
+
     if (!article) {
       return { success: false, error: 'Article not found.' };
     }
-
-    const versions = await articleRepository.findVersionHistory(articleId);
 
     return {
       success: true,
@@ -145,6 +147,7 @@ export async function getArticleDetailAction(articleId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createArticleAction(rawInput: CreateArticleSchemaInput) {
   try {

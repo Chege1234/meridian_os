@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ListTodo,
   Plus,
@@ -51,14 +52,11 @@ import { getCategoriesAction } from '@/features/knowledge-base/actions';
 import { SopEditor } from './SopEditor';
 
 export function SopPage() {
-  const [sops, setSops] = useState<Sop[]>([]);
-  const [overdueSops, setOverdueSops] = useState<Sop[]>([]);
-  const [categories, setCategories] = useState<KbCategory[]>([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [needsReviewOnly, setNeedsReviewOnly] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // Editor states
   const [editingSopId, setEditingSopId] = useState<string | null>(null);
@@ -69,41 +67,40 @@ export function SopPage() {
   const [checklistSteps, setChecklistSteps] = useState<{ instruction: string; note?: string | null; checked: boolean }[]>([]);
   const [loadingChecklist, setLoadingChecklist] = useState(false);
 
-  async function loadData() {
-    setLoading(true);
-    try {
-      const catRes = await getCategoriesAction();
-      if (catRes.success) {
-        setCategories(catRes.categories);
-      }
+  const { data: catRes, isLoading: loadingCategories } = useQuery({
+    queryKey: ['sopCategories'],
+    queryFn: () => getCategoriesAction(),
+    staleTime: 300000, // 5 mins
+  });
 
-      const overdueRes = await getOverdueSopsAction();
-      if (overdueRes.success) {
-        setOverdueSops(overdueRes.sops);
-      }
+  const { data: overdueRes, isLoading: loadingOverdue } = useQuery({
+    queryKey: ['overdueSops'],
+    queryFn: () => getOverdueSopsAction(),
+    staleTime: 300000, // 5 mins
+  });
 
-      const listRes = await getSopsAction({
-        search: search || undefined,
-        categoryId: categoryId === 'all' ? undefined : categoryId,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-        needsReviewOnly: needsReviewOnly || undefined,
-      });
+  const { data: listRes, isLoading: loadingSops } = useQuery({
+    queryKey: ['sops', { search, categoryId, statusFilter, needsReviewOnly }],
+    queryFn: () => getSopsAction({
+      search: search || undefined,
+      categoryId: categoryId === 'all' ? undefined : categoryId,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      needsReviewOnly: needsReviewOnly || undefined,
+    }),
+    staleTime: 300000, // 5 mins
+  });
 
-      if (listRes.success) {
-        setSops(listRes.sops);
-      } else {
-        toast.error(listRes.error || 'Failed to load SOP checklists.');
-      }
-    } catch {
-      toast.error('An error occurred during data fetching.');
-    } finally {
-      setLoading(false);
-    }
+  const categories = catRes?.success ? catRes.categories : [];
+  const overdueSops = overdueRes?.success ? overdueRes.sops : [];
+  const sops = listRes?.success ? listRes.sops : [];
+  const loading = loadingCategories || loadingOverdue || loadingSops;
+
+  function loadData() {
+    queryClient.invalidateQueries({ queryKey: ['sops'] });
+    queryClient.invalidateQueries({ queryKey: ['overdueSops'] });
+    queryClient.invalidateQueries({ queryKey: ['sopCategories'] });
   }
 
-  useEffect(() => {
-    loadData();
-  }, [search, categoryId, statusFilter, needsReviewOnly]);
 
   async function handleArchiveSop(id: string) {
     if (!confirm('Are you sure you want to archive this SOP? This will soft delete it.')) return;

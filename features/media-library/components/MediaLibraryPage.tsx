@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Upload,
@@ -67,13 +68,11 @@ function formatFileSize(bytes: number): string {
 type ViewMode = 'grid' | 'list';
 
 export function MediaLibraryPage() {
-  const [assets, setAssets] = useState<MediaAsset[]>([]);
-  const [folders, setFolders] = useState<MediaFolder[]>([]);
-  const [breadcrumbs, setBreadcrumbs] = useState<MediaFolder[]>([]);
+  const queryClient = useQueryClient();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -89,44 +88,47 @@ export function MediaLibraryPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [assetsRes, foldersRes] = await Promise.all([
-        getMediaAssetsAction({
-          search: search || undefined,
-          folderId: search ? undefined : currentFolderId,
-          status: 'active',
-        }),
-        getMediaFoldersAction(currentFolderId),
-      ]);
-
-      if (assetsRes.success) setAssets(assetsRes.assets);
-      if (foldersRes.success) setFolders(foldersRes.folders);
-
-      if (currentFolderId) {
-        const bcRes = await getFolderBreadcrumbsAction(currentFolderId);
-        if (bcRes.success) setBreadcrumbs(bcRes.breadcrumbs);
-      } else {
-        setBreadcrumbs([]);
-      }
-    } catch {
-      toast.error('Failed to load media library.');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentFolderId, search]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Debounced search
-  useEffect(() => {
-    const timeout = setTimeout(() => loadData(), 300);
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
+
+  const { data: assetsRes, isLoading: loadingAssets } = useQuery({
+    queryKey: ['mediaAssets', { search: debouncedSearch, currentFolderId }],
+    queryFn: () => getMediaAssetsAction({
+      search: debouncedSearch || undefined,
+      folderId: debouncedSearch ? undefined : currentFolderId,
+      status: 'active',
+    }),
+    staleTime: 180000, // 3 mins
+  });
+
+  const { data: foldersRes, isLoading: loadingFolders } = useQuery({
+    queryKey: ['mediaFolders', currentFolderId],
+    queryFn: () => getMediaFoldersAction(currentFolderId),
+    staleTime: 180000, // 3 mins
+  });
+
+  const { data: bcRes } = useQuery({
+    queryKey: ['mediaBreadcrumbs', currentFolderId],
+    queryFn: () => getFolderBreadcrumbsAction(currentFolderId!),
+    enabled: !!currentFolderId,
+    staleTime: 180000, // 3 mins
+  });
+
+  const assets = assetsRes?.success ? assetsRes.assets : [];
+  const folders = foldersRes?.success ? foldersRes.folders : [];
+  const breadcrumbs = currentFolderId && bcRes?.success ? bcRes.breadcrumbs : [];
+  const loading = loadingAssets || loadingFolders;
+
+  const loadData = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['mediaAssets'] });
+    queryClient.invalidateQueries({ queryKey: ['mediaFolders'] });
+    queryClient.invalidateQueries({ queryKey: ['mediaBreadcrumbs'] });
+  }, [queryClient]);
+
 
   function navigateToFolder(folderId: string | null) {
     setCurrentFolderId(folderId);

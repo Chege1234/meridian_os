@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   Save,
@@ -53,6 +54,7 @@ interface SopEditorProps {
 }
 
 export function SopEditor({ sopId, onClose }: SopEditorProps) {
+  const queryClient = useQueryClient();
   const [sop, setSop] = useState<Sop | null>(null);
   const [versions, setVersions] = useState<SopVersion[]>([]);
   const [categories, setCategories] = useState<KbCategory[]>([]);
@@ -204,6 +206,8 @@ export function SopEditor({ sopId, onClose }: SopEditorProps) {
         if (res.success) {
           toast.success('SOP updated and new version snapshot created.');
           setSummary('');
+          queryClient.invalidateQueries({ queryKey: ['sops'] });
+          queryClient.invalidateQueries({ queryKey: ['overdueSops'] });
           await loadDetails();
         } else {
           toast.error(res.error || 'Failed to update SOP.');
@@ -216,6 +220,8 @@ export function SopEditor({ sopId, onClose }: SopEditorProps) {
 
         if (res.success && 'sop' in res && res.sop) {
           toast.success('SOP created as Draft successfully.');
+          queryClient.invalidateQueries({ queryKey: ['sops'] });
+          queryClient.invalidateQueries({ queryKey: ['overdueSops'] });
           onClose();
         } else {
           toast.error(res.error || 'Failed to create SOP.');

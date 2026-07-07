@@ -66,13 +66,15 @@ export async function getContactDetailAction(contactId: string) {
     const interactionRepository = createSupabaseContactInteractionRepository(supabase);
     const taskRepository = createSupabaseTaskRepository(supabase);
 
-    const contact = await contactRepository.findById(contactId);
+    const [contact, interactions, tasks] = await Promise.all([
+      contactRepository.findById(contactId),
+      interactionRepository.findByContactId(contactId),
+      taskRepository.findByContactId(contactId),
+    ]);
+
     if (!contact) {
       return { success: false, error: 'Contact not found.' };
     }
-
-    const interactions = await interactionRepository.findByContactId(contactId);
-    const tasks = await taskRepository.findByContactId(contactId);
 
     return {
       success: true,
@@ -84,6 +86,7 @@ export async function getContactDetailAction(contactId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createContactAction(rawInput: CreateContactSchemaInput) {
   try {

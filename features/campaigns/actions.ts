@@ -83,15 +83,17 @@ export async function getCampaignDetailAction(campaignId: string) {
     const campaignRepository = createSupabaseCampaignRepository(supabase);
     const taskRepository = createSupabaseTaskRepository(supabase);
 
-    const campaign = await campaignRepository.findById(campaignId);
+    const [campaign, contentItems, contacts, tasks, metrics] = await Promise.all([
+      campaignRepository.findById(campaignId),
+      campaignRepository.findContentItems(campaignId),
+      campaignRepository.findContacts(campaignId),
+      taskRepository.findByCampaignId(campaignId),
+      campaignRepository.findMetrics(campaignId),
+    ]);
+
     if (!campaign) {
       return { success: false, error: 'Campaign not found.' };
     }
-
-    const contentItems = await campaignRepository.findContentItems(campaignId);
-    const contacts = await campaignRepository.findContacts(campaignId);
-    const tasks = await taskRepository.findByCampaignId(campaignId);
-    const metrics = await campaignRepository.findMetrics(campaignId);
 
     return {
       success: true,
@@ -105,6 +107,7 @@ export async function getCampaignDetailAction(campaignId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createCampaignAction(rawInput: CreateCampaignSchemaInput) {
   try {

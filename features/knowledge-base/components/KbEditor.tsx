@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   Save,
@@ -55,6 +56,7 @@ interface KbEditorProps {
 }
 
 export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProps) {
+  const queryClient = useQueryClient();
   const [article, setArticle] = useState<KbArticle | null>(null);
   const [versions, setVersions] = useState<KbArticleVersion[]>([]);
   const [categories, setCategories] = useState<KbCategory[]>([]);
@@ -152,6 +154,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
         if (res.success) {
           toast.success('Article updated and new version snapshot created.');
           setSummary('');
+          queryClient.invalidateQueries({ queryKey: ['kbArticles'] });
           await loadDetails();
         } else {
           toast.error(res.error || 'Failed to update article.');
@@ -168,6 +171,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
 
         if (res.success && 'article' in res && res.article) {
           toast.success('Article created as Draft successfully.');
+          queryClient.invalidateQueries({ queryKey: ['kbArticles'] });
           onClose();
         } else {
           toast.error(res.error || 'Failed to create article.');
@@ -190,6 +194,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
 
       if (res.success) {
         toast.success(`Article status transitioned to ${targetStatus} successfully.`);
+        queryClient.invalidateQueries({ queryKey: ['kbArticles'] });
         await loadDetails();
       } else {
         toast.error(res.error || 'Status transition failed.');

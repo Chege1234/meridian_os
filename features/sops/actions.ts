@@ -72,12 +72,14 @@ export async function getSopDetailAction(sopId: string) {
     const { supabase } = await getAuthenticatedActor(false);
     const sopRepository = createSupabaseSopRepository(supabase);
 
-    const sop = await sopRepository.findById(sopId);
+    const [sop, versions] = await Promise.all([
+      sopRepository.findById(sopId),
+      sopRepository.findVersionHistory(sopId),
+    ]);
+
     if (!sop) {
       return { success: false, error: 'SOP not found.' };
     }
-
-    const versions = await sopRepository.findVersionHistory(sopId);
 
     return {
       success: true,
@@ -88,6 +90,7 @@ export async function getSopDetailAction(sopId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createSopAction(rawInput: CreateSopSchemaInput) {
   try {

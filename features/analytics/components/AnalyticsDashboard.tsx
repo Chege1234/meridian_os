@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Dashboard, SavedReport, ReportType, DashboardWidget } from '@/domain/entities';
 import { DateRangePicker, type DateRange } from '@/shared/components/DateRangePicker';
 import { CampaignPerformanceChart } from './CampaignPerformanceChart';
@@ -44,111 +45,91 @@ const DEFAULT_RANGE: DateRange = {
 };
 
 export default function AnalyticsDashboard() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
   const [dateRange, setDateRange] = useState<DateRange>(DEFAULT_RANGE);
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-
-  // Dashboards & Reports List State
-  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [activeDashboard, setActiveDashboard] = useState<Dashboard | null>(null);
-  const [reports, setReports] = useState<SavedReport[]>([]);
   const [savingLayout, setSavingLayout] = useState(false);
 
-  // Aggregated Data State
-  const [campaignData, setCampaignData] = useState<any[]>([]);
-  const [contentData, setContentData] = useState<any>(null);
-  const [crmData, setCrmData] = useState<any>(null);
-  const [aiData, setAiData] = useState<any[]>([]);
-
-  // Approvals State
-  const [pendingAutosCount, setPendingAutosCount] = useState(0);
-  const [pendingAgentsCount, setPendingAgentsCount] = useState(0);
-
   // Fetch pending approvals counts
-  useEffect(() => {
-    async function loadApprovals() {
-      try {
-        const autoRes = await getAutomationRunsAction({ status: 'pending_approval' });
-        if (autoRes.success && autoRes.runs) {
-          setPendingAutosCount(autoRes.runs.length);
-        }
-        const agentRes = await getAgentRunsAction({ status: 'pending_approval' });
-        if (agentRes.success && agentRes.runs) {
-          setPendingAgentsCount(agentRes.runs.length);
-        }
-      } catch (err) {
-        console.warn('Failed to load pending approvals counts for analytics:', err);
-      }
-    }
-    loadApprovals();
-  }, []);
+  const { data: autoRes } = useQuery({
+    queryKey: ['automationRuns', 'pending_approval'],
+    queryFn: () => getAutomationRunsAction({ status: 'pending_approval' }),
+    staleTime: 30000, // 30 secs
+  });
 
+  const { data: agentRes } = useQuery({
+    queryKey: ['agentRuns', 'pending_approval'],
+    queryFn: () => getAgentRunsAction({ status: 'pending_approval' }),
+    staleTime: 30000, // 30 secs
+  });
+
+  const pendingAutosCount = autoRes?.success && autoRes.runs ? autoRes.runs.length : 0;
+  const pendingAgentsCount = agentRes?.success && agentRes.runs ? agentRes.runs.length : 0;
 
   // Load Dashboards & Reports Lists on Mount
+  const { data: dRes } = useQuery({
+    queryKey: ['dashboards'],
+    queryFn: () => getDashboardsAction(),
+    staleTime: 60000, // 1 min
+  });
+
+  const { data: rRes } = useQuery({
+    queryKey: ['savedReports'],
+    queryFn: () => getSavedReportsAction(),
+    staleTime: 60000, // 1 min
+  });
+
+  const dashboards = dRes?.success && dRes.dashboards ? dRes.dashboards : [];
+  const reports = rRes?.success && rRes.savedReports ? rRes.savedReports : [];
+
   useEffect(() => {
-    async function loadConfig() {
-      try {
-        const dRes = await getDashboardsAction();
-        if (dRes.success && dRes.dashboards) {
-          setDashboards(dRes.dashboards);
-          if (dRes.dashboards.length > 0) {
-            setActiveDashboard(dRes.dashboards[0] ?? null);
-          }
-        }
-        const rRes = await getSavedReportsAction();
-        if (rRes.success && rRes.savedReports) {
-          setReports(rRes.savedReports);
-        }
-      } catch (err) {
-        console.error('Failed to load initial configurations:', err);
-      }
+    if (dashboards.length > 0 && !activeDashboard) {
+      setActiveDashboard(dashboards[0] ?? null);
     }
-    loadConfig();
-  }, []);
+  }, [dashboards, activeDashboard]);
 
   // Fetch Aggregated Metrics when Date Range or Active Dashboard changes
-  useEffect(() => {
-    async function fetchData() {
-      setLoadingData(true);
-      try {
-        // Fetch all metrics concurrently
-        const [campRes, contRes, crmRes, aiRes] = await Promise.all([
-          getCampaignPerformanceAction({
-            campaignId: null,
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-          }),
-          getContentPerformanceAction({
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-            platform: null,
-            status: null,
-          }),
-          getCrmActivitySummaryAction({
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-          }),
-          getAiUsageCostAction({
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-            provider: null,
-          }),
-        ]);
+  const { data: metricsData, isLoading: loadingData } = useQuery({
+    queryKey: ['analyticsMetrics', { dateRange, activeDashboardId: activeDashboard?.id }],
+    queryFn: async () => {
+      const [campRes, contRes, crmRes, aiRes] = await Promise.all([
+        getCampaignPerformanceAction({
+          campaignId: null,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        }),
+        getContentPerformanceAction({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          platform: null,
+          status: null,
+        }),
+        getCrmActivitySummaryAction({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        }),
+        getAiUsageCostAction({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          provider: null,
+        }),
+      ]);
+      return {
+        campaignData: campRes.success && 'data' in campRes && campRes.data ? campRes.data : [],
+        contentData: contRes.success && 'data' in contRes && contRes.data ? contRes.data : null,
+        crmData: crmRes.success && 'data' in crmRes && crmRes.data ? crmRes.data : null,
+        aiData: aiRes.success && 'data' in aiRes && aiRes.data ? aiRes.data : [],
+      };
+    },
+    staleTime: 30000, // 30 secs
+  });
 
-        if (campRes.success && 'data' in campRes && campRes.data) setCampaignData(campRes.data);
-        if (contRes.success && 'data' in contRes && contRes.data) setContentData(contRes.data);
-        if (crmRes.success && 'data' in crmRes && crmRes.data) setCrmData(crmRes.data);
-        if (aiRes.success && 'data' in aiRes && aiRes.data) setAiData(aiRes.data as any[]);
-      } catch (err) {
-        console.error('Failed to fetch analytics metrics:', err);
-      } finally {
-        setLoadingData(false);
-      }
-    }
-
-    fetchData();
-  }, [dateRange, activeDashboard]);
+  const campaignData = metricsData?.campaignData || [];
+  const contentData = metricsData?.contentData || null;
+  const crmData = metricsData?.crmData || null;
+  const aiData = metricsData?.aiData || [];
 
   // Dashboard Operations
   const handleSaveLayout = async (name: string, widgets: DashboardWidget[]) => {
@@ -163,7 +144,7 @@ export default function AnalyticsDashboard() {
         });
         if (res.success && 'dashboard' in res && res.dashboard) {
           setActiveDashboard(res.dashboard);
-          setDashboards(dashboards.map((d) => (d.id === (res as any).dashboard!.id ? (res as any).dashboard! : d)));
+          queryClient.invalidateQueries({ queryKey: ['dashboards'] });
         } else {
           alert(res.error || 'Failed to update layout.');
         }
@@ -172,7 +153,7 @@ export default function AnalyticsDashboard() {
         const res = await createDashboardAction({ name, layout: widgets });
         if (res.success && 'dashboard' in res && res.dashboard) {
           setActiveDashboard(res.dashboard);
-          setDashboards([...dashboards, (res as any).dashboard]);
+          queryClient.invalidateQueries({ queryKey: ['dashboards'] });
         } else {
           alert(res.error || 'Failed to create dashboard.');
         }
@@ -192,8 +173,8 @@ export default function AnalyticsDashboard() {
     try {
       const res = await deleteDashboardAction(activeDashboard.id);
       if (res.success) {
+        queryClient.invalidateQueries({ queryKey: ['dashboards'] });
         const filtered = dashboards.filter((d) => d.id !== activeDashboard.id);
-        setDashboards(filtered);
         setActiveDashboard(filtered.length > 0 ? filtered[0] ?? null : null);
       } else {
         alert(res.error || 'Failed to delete dashboard.');
@@ -208,7 +189,7 @@ export default function AnalyticsDashboard() {
     try {
       const res = await saveReportAction({ name, reportType: type, filters });
       if (res.success && 'savedReport' in res && res.savedReport) {
-        setReports([...reports, (res as any).savedReport]);
+        queryClient.invalidateQueries({ queryKey: ['savedReports'] });
       } else {
         throw new Error(res.error || 'Failed to save report.');
       }
@@ -222,7 +203,7 @@ export default function AnalyticsDashboard() {
     try {
       const res = await deleteSavedReportAction(id);
       if (res.success) {
-        setReports(reports.filter((r) => r.id !== id));
+        queryClient.invalidateQueries({ queryKey: ['savedReports'] });
       } else {
         alert(res.error || 'Failed to delete report.');
       }

@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -86,11 +87,7 @@ interface CampaignDetailPageProps {
 }
 
 export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [contacts, setContacts] = useState<{ contact: Contact; role: CampaignContactRole }[]>([]);
-  const [metrics, setMetrics] = useState<CampaignMetric[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -122,37 +119,34 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     resolver: zodResolver(updateCampaignSchema),
   });
 
-  async function loadDetail() {
-    try {
-      const res = await getCampaignDetailAction(campaignId);
-      if (res.success && res.campaign) {
-        setCampaign(res.campaign);
-        setContentItems(res.contentItems || []);
-        setContacts(res.contacts || []);
-        setMetrics(res.metrics || []);
-        reset({
-          name: res.campaign.name,
-          objective: res.campaign.objective,
-          startDate: new Date(res.campaign.startDate).toISOString().split('T')[0] as any,
-          endDate: res.campaign.endDate ? new Date(res.campaign.endDate).toISOString().split('T')[0] as any : '',
-          budget: res.campaign.budget || null,
-        });
+  const { data: detailRes, isLoading: loadingCampaign } = useQuery({
+    queryKey: ['campaign', campaignId],
+    queryFn: () => getCampaignDetailAction(campaignId),
+    staleTime: 120000, // 2 mins
+  });
 
-        // Determine user role (can read it from auth user)
-        // For local layout logic, we fetch detail where auth is implicit, or use default rules
-      } else {
-        toast.error(res.error || 'Failed to load campaign details.');
-      }
-    } catch {
-      toast.error('An error occurred loading campaign details.');
-    } finally {
-      setLoading(false);
-    }
+  const campaign = detailRes?.success ? detailRes.campaign : null;
+  const contentItems = detailRes?.success ? detailRes.contentItems || [] : [];
+  const contacts = detailRes?.success ? detailRes.contacts || [] : [];
+  const metrics = detailRes?.success ? detailRes.metrics || [] : [];
+  const loading = loadingCampaign;
+
+  function loadDetail() {
+    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
   }
 
   useEffect(() => {
-    loadDetail();
-  }, [campaignId]);
+    if (detailRes?.success && detailRes.campaign) {
+      reset({
+        name: detailRes.campaign.name,
+        objective: detailRes.campaign.objective,
+        startDate: new Date(detailRes.campaign.startDate).toISOString().split('T')[0] as any,
+        endDate: detailRes.campaign.endDate ? new Date(detailRes.campaign.endDate).toISOString().split('T')[0] as any : '',
+        budget: detailRes.campaign.budget || null,
+      });
+    }
+  }, [detailRes, reset]);
+
 
   // Helper to pivot metrics for the chart
   const chartData = (() => {
@@ -233,8 +227,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   async function onSave(data: UpdateCampaignSchemaInput) {
     try {
       const res = await updateCampaignAction({ id: campaignId, data });
-      if (res.success && res.campaign) {
-        setCampaign(res.campaign);
+      if (res.success) {
         setEditing(false);
         toast.success('Campaign details updated.');
         loadDetail();
@@ -249,8 +242,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   async function handleStatusTransition(nextStatus: CampaignStatus) {
     try {
       const res = await transitionCampaignStatusAction({ id: campaignId, status: nextStatus });
-      if (res.success && res.campaign) {
-        setCampaign(res.campaign);
+      if (res.success) {
         toast.success(`Campaign moved to status "${nextStatus}".`);
         loadDetail();
       } else {

@@ -7,9 +7,10 @@
  * Per BR-800: duplicate contacts are flagged with a visual indicator.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, AlertTriangle, Eye, Trash2, ShieldAlert } from 'lucide-react';
 import {
   useReactTable,
@@ -34,33 +35,21 @@ import { getContactsAction, archiveContactAction } from '../actions';
 import { NewContactDialog } from './NewContactDialog';
 
 export function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
-  const [loading, setLoading] = useState(true);
 
-  async function loadContacts() {
-    setLoading(true);
-    try {
-      const res = await getContactsAction({
-        search: search || undefined,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-      });
-      if (res.success) {
-        setContacts(res.contacts);
-      } else {
-        toast.error(res.error || 'Failed to load contacts.');
-      }
-    } catch {
-      toast.error('An error occurred loading contacts.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data: contactsRes, isLoading: loadingContacts } = useQuery({
+    queryKey: ['contacts', { search, statusFilter }],
+    queryFn: () => getContactsAction({
+      search: search || undefined,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+    }),
+    staleTime: 300000, // 5 mins (contacts change rarely)
+  });
 
-  useEffect(() => {
-    loadContacts();
-  }, [search, statusFilter]);
+  const contacts = contactsRes?.success ? contactsRes.contacts : [];
+  const loading = loadingContacts;
 
   async function handleArchive(id: string) {
     if (!confirm('Are you sure you want to archive this contact?')) return;
@@ -68,7 +57,7 @@ export function ContactsPage() {
       const res = await archiveContactAction(id);
       if (res.success) {
         toast.success('Contact archived successfully.');
-        loadContacts();
+        queryClient.invalidateQueries({ queryKey: ['contacts'] });
       } else {
         toast.error(res.error || 'Failed to archive contact.');
       }
@@ -76,6 +65,7 @@ export function ContactsPage() {
       toast.error(err.message || 'An error occurred.');
     }
   }
+
 
   // Check if a contact is a potential duplicate of another contact in the current list
   const isPotentialDuplicate = (contact: Contact) => {
@@ -191,7 +181,7 @@ export function ContactsPage() {
             Manage your organizations and contact list.
           </p>
         </div>
-        <NewContactDialog onSuccess={loadContacts} />
+        <NewContactDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ['contacts'] })} />
       </div>
 
       {/* Controls: Search & Filters */}

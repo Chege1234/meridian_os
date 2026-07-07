@@ -6,9 +6,10 @@
  * Searchable, filterable list of campaigns using TanStack Table + card grid view.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Grid,
@@ -46,46 +47,33 @@ import { getActiveUsersAction } from '@/features/tasks/actions';
 import { NewCampaignDialog } from './NewCampaignDialog';
 
 export function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [viewType, setViewType] = useState<'grid' | 'table'>('grid');
-  const [loading, setLoading] = useState(true);
 
-  async function loadData() {
-    setLoading(true);
-    try {
-      const res = await getCampaignsAction({
-        search: search || undefined,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-        channel: channelFilter === 'all' ? undefined : channelFilter,
-        ownerId: ownerFilter === 'all' ? undefined : ownerFilter,
-      });
+  const { data: campaignsRes, isLoading: loadingCampaigns } = useQuery({
+    queryKey: ['campaigns', { search, statusFilter, channelFilter, ownerFilter }],
+    queryFn: () => getCampaignsAction({
+      search: search || undefined,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      channel: channelFilter === 'all' ? undefined : channelFilter,
+      ownerId: ownerFilter === 'all' ? undefined : ownerFilter,
+    }),
+    staleTime: 120000, // 2 mins
+  });
 
-      const usersRes = await getActiveUsersAction();
+  const { data: usersRes } = useQuery({
+    queryKey: ['activeUsers'],
+    queryFn: () => getActiveUsersAction(),
+    staleTime: 300000, // 5 mins
+  });
 
-      if (res.success) {
-        setCampaigns(res.campaigns);
-      } else {
-        toast.error(res.error || 'Failed to load campaigns.');
-      }
-
-      if (usersRes.success && usersRes.users) {
-        setUsers(usersRes.users);
-      }
-    } catch {
-      toast.error('An error occurred loading campaigns data.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-  }, [search, statusFilter, channelFilter, ownerFilter]);
+  const campaigns = campaignsRes?.success ? campaignsRes.campaigns : [];
+  const users = usersRes?.success && usersRes.users ? usersRes.users : [];
+  const loading = loadingCampaigns;
 
   async function handleArchive(id: string) {
     if (!confirm('Are you sure you want to archive this campaign?')) return;
@@ -93,7 +81,7 @@ export function CampaignsPage() {
       const res = await archiveCampaignAction(id);
       if (res.success) {
         toast.success('Campaign archived successfully.');
-        loadData();
+        queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       } else {
         toast.error(res.error || 'Failed to archive campaign.');
       }
@@ -116,51 +104,56 @@ export function CampaignsPage() {
       case 'paused':
         return 'outline';
       case 'completed':
-        return 'default'; // In standard, we can style it separately
+        return 'default';
+      case 'archived':
+        return 'destructive';
       default:
         return 'secondary';
     }
   };
 
-  const formatBudget = (val: number | null) => {
-    if (val === null || val === undefined) return 'No budget set';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  const formatBudget = (budget: number | null) => {
+    if (budget === null) return 'No budget';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(budget);
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString(undefined, {
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
   };
 
-  // Table Setup
+  // TanStack Table setup
   const columnHelper = createColumnHelper<Campaign>();
   const columns = [
     columnHelper.accessor('name', {
       header: 'Campaign Name',
       cell: (info) => (
-        <div className="font-semibold text-foreground">{info.getValue()}</div>
+        <span className="font-bold text-foreground truncate block max-w-xs">
+          {info.getValue()}
+        </span>
       ),
     }),
     columnHelper.accessor('status', {
       header: 'Status',
-      cell: (info) => {
-        const s = info.getValue();
-        return (
-          <Badge variant={getStatusBadgeVariant(s)} className="capitalize">
-            {s}
-          </Badge>
-        );
-      },
+      cell: (info) => (
+        <Badge variant={getStatusBadgeVariant(info.getValue())} className="capitalize text-[10px] px-2 py-0.5">
+          {info.getValue()}
+        </Badge>
+      ),
     }),
     columnHelper.accessor('channel', {
       header: 'Channels',
       cell: (info) => (
         <div className="flex flex-wrap gap-1 max-w-[200px]">
           {info.getValue().map((ch) => (
-            <Badge key={ch} variant="outline" className="text-[10px] capitalize px-1 py-0 border-border/80">
+            <Badge key={ch} variant="outline" className="text-[9px] capitalize px-1 py-0 border-border/80 bg-muted/20">
               {ch}
             </Badge>
           ))}
@@ -169,22 +162,15 @@ export function CampaignsPage() {
     }),
     columnHelper.accessor('budget', {
       header: 'Budget',
-      cell: (info) => <span>{formatBudget(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('startDate', {
-      header: 'Timeline',
-      cell: (info) => {
-        const row = info.row.original;
-        return (
-          <span className="text-xs text-muted-foreground">
-            {formatDate(row.startDate)} — {row.endDate ? formatDate(row.endDate) : 'Ongoing'}
-          </span>
-        );
-      },
+      cell: (info) => <span className="font-medium text-foreground">{formatBudget(info.getValue())}</span>,
     }),
     columnHelper.accessor('ownerId', {
       header: 'Owner',
-      cell: (info) => <span className="text-xs">{getOwnerName(info.getValue())}</span>,
+      cell: (info) => <span className="text-foreground">{getOwnerName(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('startDate', {
+      header: 'Start Date',
+      cell: (info) => <span className="text-muted-foreground">{formatDate(info.getValue())}</span>,
     }),
     columnHelper.display({
       id: 'actions',
@@ -192,10 +178,11 @@ export function CampaignsPage() {
       cell: (info) => {
         const campaign = info.row.original;
         return (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <Link href={`/campaigns/${campaign.id}`} passHref>
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-muted/80">
-                <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              <Button size="sm" variant="ghost" className="h-8 px-2 gap-1 text-xs">
+                <Eye className="h-4 w-4" />
+                View
               </Button>
             </Link>
             <Button
@@ -228,7 +215,7 @@ export function CampaignsPage() {
             Plan, monitor, and coordinate your multi-channel marketing campaigns.
           </p>
         </div>
-        <NewCampaignDialog onSuccess={loadData} />
+        <NewCampaignDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ['campaigns'] })} />
       </div>
 
       {/* Filters & Actions Panel */}

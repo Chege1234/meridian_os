@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Plus,
@@ -52,12 +53,10 @@ import { CategoryNode } from './CategoryNode';
 import { KbEditor } from './KbEditor';
 
 export function KbPage() {
-  const [categories, setCategories] = useState<KbCategory[]>([]);
-  const [articles, setArticles] = useState<KbArticle[]>([]);
+  const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
 
   // Editor toggle state
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
@@ -74,35 +73,31 @@ export function KbPage() {
   const [readingContent, setReadingContent] = useState('');
   const [loadingReadView, setLoadingReadView] = useState(false);
 
-  async function loadData() {
-    setLoading(true);
-    try {
-      const catRes = await getCategoriesAction();
-      if (catRes.success) {
-        setCategories(catRes.categories);
-      }
+  const { data: catRes, isLoading: loadingCategories } = useQuery({
+    queryKey: ['kbCategories'],
+    queryFn: () => getCategoriesAction(),
+    staleTime: 300000, // 5 mins
+  });
 
-      const artRes = await getArticlesAction({
-        search: search || undefined,
-        categoryId: selectedCategoryId || undefined,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-      });
+  const { data: artRes, isLoading: loadingArticles } = useQuery({
+    queryKey: ['kbArticles', { search, selectedCategoryId, statusFilter }],
+    queryFn: () => getArticlesAction({
+      search: search || undefined,
+      categoryId: selectedCategoryId || undefined,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+    }),
+    staleTime: 300000, // 5 mins
+  });
 
-      if (artRes.success) {
-        setArticles(artRes.articles);
-      } else {
-        toast.error(artRes.error || 'Failed to load articles.');
-      }
-    } catch {
-      toast.error('An error occurred during data fetching.');
-    } finally {
-      setLoading(false);
-    }
+  const categories = catRes?.success ? catRes.categories : [];
+  const articles = artRes?.success ? artRes.articles : [];
+  const loading = loadingCategories || loadingArticles;
+
+  function loadData() {
+    queryClient.invalidateQueries({ queryKey: ['kbArticles'] });
+    queryClient.invalidateQueries({ queryKey: ['kbCategories'] });
   }
 
-  useEffect(() => {
-    loadData();
-  }, [selectedCategoryId, search, statusFilter]);
 
   async function handleCreateCategory(e: React.FormEvent) {
     e.preventDefault();
@@ -124,11 +119,7 @@ export function KbPage() {
         setIsCreateCategoryOpen(false);
         setNewCategoryName('');
         setNewCategoryParentId(null);
-        // Reload categories
-        const catRes = await getCategoriesAction();
-        if (catRes.success) {
-          setCategories(catRes.categories);
-        }
+        queryClient.invalidateQueries({ queryKey: ['kbCategories'] });
       } else {
         toast.error(res.error || 'Failed to create category.');
       }

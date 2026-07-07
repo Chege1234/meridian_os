@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -45,9 +46,7 @@ interface ContactDetailPageProps {
 }
 
 export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
-  const [contact, setContact] = useState<Contact | null>(null);
-  const [interactions, setInteractions] = useState<ContactInteraction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
 
   const {
@@ -59,38 +58,37 @@ export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
     resolver: zodResolver(updateContactSchema),
   });
 
-  async function loadDetail() {
-    try {
-      const res = await getContactDetailAction(contactId);
-      if (res.success && res.contact) {
-        setContact(res.contact);
-        setInteractions(res.interactions || []);
-        reset({
-          name: res.contact.name,
-          organization: res.contact.organization || '',
-          email: res.contact.email || '',
-          phone: res.contact.phone || '',
-          notes: res.contact.notes || '',
-        });
-      } else {
-        toast.error(res.error || 'Failed to load contact details.');
-      }
-    } catch {
-      toast.error('An error occurred loading contact details.');
-    } finally {
-      setLoading(false);
-    }
+  const { data: detailRes, isLoading: loadingContact } = useQuery({
+    queryKey: ['contact', contactId],
+    queryFn: () => getContactDetailAction(contactId),
+    staleTime: 300000, // 5 mins (contacts change rarely)
+  });
+
+  const contact = detailRes?.success ? detailRes.contact : null;
+  const interactions = detailRes?.success ? detailRes.interactions || [] : [];
+  const loading = loadingContact;
+
+  function loadDetail() {
+    queryClient.invalidateQueries({ queryKey: ['contact', contactId] });
   }
 
   useEffect(() => {
-    loadDetail();
-  }, [contactId]);
+    if (detailRes?.success && detailRes.contact) {
+      reset({
+        name: detailRes.contact.name,
+        organization: detailRes.contact.organization || '',
+        email: detailRes.contact.email || '',
+        phone: detailRes.contact.phone || '',
+        notes: detailRes.contact.notes || '',
+      });
+    }
+  }, [detailRes, reset]);
+
 
   async function onSave(data: UpdateContactSchemaInput) {
     try {
       const res = await updateContactAction({ id: contactId, data });
-      if (res.success && res.contact) {
-        setContact(res.contact);
+      if (res.success) {
         setEditing(false);
         toast.success('Contact details updated.');
         loadDetail();

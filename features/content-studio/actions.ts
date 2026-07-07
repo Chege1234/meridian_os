@@ -80,13 +80,15 @@ export async function getContentDetailAction(contentId: string) {
     const { supabase } = await getAuthenticatedActor(false);
     const contentRepository = createSupabaseContentRepository(supabase);
 
-    const contentItem = await contentRepository.findById(contentId);
+    const [contentItem, versions, media] = await Promise.all([
+      contentRepository.findById(contentId),
+      contentRepository.findVersionHistory(contentId),
+      contentRepository.findAssociatedMedia(contentId),
+    ]);
+
     if (!contentItem) {
       return { success: false, error: 'Content item not found.' };
     }
-
-    const versions = await contentRepository.findVersionHistory(contentId);
-    const media = await contentRepository.findAssociatedMedia(contentId);
 
     return {
       success: true,
@@ -98,6 +100,7 @@ export async function getContentDetailAction(contentId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createContentItemAction(rawInput: CreateContentItemSchemaInput) {
   try {

@@ -62,12 +62,14 @@ export async function getPromptDetailAction(promptId: string) {
     const { supabase } = await getAuthenticatedActor(false);
     const promptRepository = createSupabasePromptRepository(supabase);
 
-    const prompt = await promptRepository.findById(promptId);
+    const [prompt, versions] = await Promise.all([
+      promptRepository.findById(promptId),
+      promptRepository.findVersionHistory(promptId),
+    ]);
+
     if (!prompt) {
       return { success: false, error: 'Prompt not found.' };
     }
-
-    const versions = await promptRepository.findVersionHistory(promptId);
 
     return {
       success: true,
@@ -78,6 +80,7 @@ export async function getPromptDetailAction(promptId: string) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function createPromptAction(rawInput: CreatePromptSchemaInput) {
   try {
