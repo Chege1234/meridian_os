@@ -189,3 +189,13 @@ export async function retrySingleCredential(id: string): Promise<ActionResult<un
     return { success: false, error: err instanceof Error ? err.message : 'Retry failed.' };
   }
 }
+
+export async function checkIsAdminOrOwner(): Promise<boolean> {
+  try {
+    await getAdminActor();
+    return true;
+  } catch {
+    return false;
+  }
+}
+

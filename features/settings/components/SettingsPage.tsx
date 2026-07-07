@@ -14,7 +14,7 @@ import { cn } from '@/shared/lib/utils';
 import { GeneralSettings } from './GeneralSettings';
 import { BrandingSettings } from './BrandingSettings';
 import { AICredentialsSettings } from './AICredentialsSettings';
-import { createClient } from '@/infrastructure/supabase/client';
+import { checkIsAdminOrOwner } from '../actions';
 
 const BASE_TABS = [
   { id: 'general', label: 'General' },
@@ -29,31 +29,12 @@ export function SettingsPage() {
 
   useEffect(() => {
     async function checkRole() {
-      try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Fetch user role name
-        const { data: profile } = await supabase
-          .from('users')
-          .select('roles(name)')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          // roles relation nested response
-          const roleName = (profile.roles as unknown as { name: string })?.name;
-          if (roleName === 'owner' || roleName === 'admin') {
-            setIsAdmin(true);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to check user role:', err);
-      }
+      const isAllowed = await checkIsAdminOrOwner();
+      setIsAdmin(isAllowed);
     }
     checkRole();
   }, []);
+
 
   const tabs = [
     ...BASE_TABS,
