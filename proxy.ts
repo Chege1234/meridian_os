@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = ['/login', '/signup', '/api/debug'];
+const PUBLIC_ROUTES = ['/login', '/signup'];
 
 /**
  * Meridian OS Proxy
