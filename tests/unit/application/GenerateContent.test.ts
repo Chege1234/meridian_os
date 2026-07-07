@@ -1,26 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { generateContent } from '@/features/content-studio/application/GenerateContent';
 import type { PromptRepository, AiConversationRepository } from '@/domain/repositories';
+import type { AiClient } from '@/infrastructure/ai/AiClient';
 import type { Prompt, PromptVersion, AiConversation } from '@/domain/entities';
-
-// Mock the AI client factory
-vi.mock('@/infrastructure/ai/AiClientFactory', () => ({
-  createAiClient: vi.fn().mockReturnValue({
-    complete: vi.fn().mockResolvedValue({
-      text: 'Mocked AI generated output text for topic: Meridian.',
-      tokenUsage: {
-        promptTokens: 40,
-        completionTokens: 20,
-        totalTokens: 60,
-      },
-      estimatedCost: 0.0001,
-    }),
-  }),
-}));
 
 describe('GenerateContent Use Case', () => {
   let mockPromptRepo: PromptRepository;
   let mockAiConvRepo: AiConversationRepository;
+  let mockAiClient: AiClient;
 
   const mockPrompt: Prompt = {
     id: 'prompt-123',
@@ -50,23 +37,6 @@ describe('GenerateContent Use Case', () => {
     createdAt: new Date(),
   };
 
-  const mockConversation: AiConversation = {
-    id: 'conv-123',
-    userId: 'user-123',
-    provider: 'openai',
-    model: 'gpt-4o-mini',
-    promptId: 'prompt-123',
-    input: 'Write an ad about Meridian for Students.',
-    response: 'Mocked AI generated output text for topic: Meridian.',
-    tokenUsage: {
-      promptTokens: 40,
-      completionTokens: 20,
-      totalTokens: 60,
-    },
-    estimatedCost: 0.0001,
-    createdAt: new Date(),
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -86,11 +56,24 @@ describe('GenerateContent Use Case', () => {
       findById: vi.fn(),
       findByUserId: vi.fn(),
       findAll: vi.fn(),
-      create: vi.fn().mockResolvedValue(mockConversation),
+      create: vi.fn(),
     } as unknown as AiConversationRepository;
+
+    mockAiClient = {
+      complete: vi.fn().mockResolvedValue({
+        text: 'Mocked AI generated output text for topic: Meridian.',
+        tokenUsage: {
+          promptTokens: 40,
+          completionTokens: 20,
+          totalTokens: 60,
+        },
+        estimatedCost: 0.0001,
+        credentialId: 'cred-123',
+      }),
+    };
   });
 
-  it('should resolve active prompt version, inject variables, complete request, and log conversation details (BR-700, BR-901, BR-904, BR-906)', async () => {
+  it('should resolve active prompt version, inject variables, invoke CredentialResolver, and track usage (BR-700, BR-901, BR-904, BR-906)', async () => {
     const input = {
       promptId: 'prompt-123',
       variables: {
@@ -98,34 +81,29 @@ describe('GenerateContent Use Case', () => {
         audience: 'Students',
       },
       userId: 'user-123',
-      options: {
-        model: 'gpt-4o-mini',
-      },
     };
 
     const result = await generateContent(input, {
       promptRepository: mockPromptRepo,
       aiConversationRepository: mockAiConvRepo,
+      aiClient: mockAiClient,
     });
 
     expect(result.success).toBe(true);
     expect(result.text).toContain('topic: Meridian');
-    expect(result.conversationId).toBe('conv-123');
 
     // Confirm prompt lookup
     expect(mockPromptRepo.findById).toHaveBeenCalledWith('prompt-123');
     expect(mockPromptRepo.findActiveByPromptId).toHaveBeenCalledWith('prompt-123');
 
-    // Confirm AI conversation was logged
-    expect(mockAiConvRepo.create).toHaveBeenCalledWith(
+    // Confirm AI client was invoked with correct context
+    expect(mockAiClient.complete).toHaveBeenCalledWith(
+      'Write an ad about Meridian for Students.',
       expect.objectContaining({
-        userId: 'user-123',
-        provider: 'openai',
-        model: 'gpt-4o-mini',
-        promptId: 'prompt-123',
-        input: 'Write an ad about Meridian for Students.',
-        response: 'Mocked AI generated output text for topic: Meridian.',
-        estimatedCost: 0.0001,
+        context: {
+          callType: 'content_generation',
+          modelTier: 'fast',
+        },
       }),
     );
 
@@ -146,6 +124,7 @@ describe('GenerateContent Use Case', () => {
     const result = await generateContent(input, {
       promptRepository: mockPromptRepo,
       aiConversationRepository: mockAiConvRepo,
+      aiClient: mockAiClient,
     });
 
     expect(result.success).toBe(false);

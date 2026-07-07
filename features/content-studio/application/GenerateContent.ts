@@ -10,11 +10,12 @@
  */
 
 import type { PromptRepository, AiConversationRepository } from '@/domain/repositories';
-import { createAiClient } from '@/infrastructure/ai/AiClientFactory';
+import type { AiClient } from '@/infrastructure/ai/AiClient';
 
 interface Dependencies {
   promptRepository: PromptRepository;
   aiConversationRepository: AiConversationRepository;
+  aiClient: AiClient;
 }
 
 interface GenerateContentInput {
@@ -65,27 +66,18 @@ export async function generateContent(
       filledPromptText = filledPromptText.replace(regex, value);
     }
 
-    // 3. Instantiate pluggable AI client based on prompt configuration
-    const aiClient = createAiClient(prompt.provider);
-
-    // 4. Complete the AI request
-    const response = await aiClient.complete(filledPromptText, {
-      model: input.options?.model,
+    // 3. Invoke the AI client via CredentialResolver (respects provider_credentials priority)
+    const response = await deps.aiClient.complete(filledPromptText, {
       temperature: input.options?.temperature,
       maxTokens: input.options?.maxTokens,
+      context: {
+        callType: 'content_generation', // User-facing content — no cross-provider fallback (BR-1405)
+        modelTier: 'fast',
+      },
     });
 
-    // 5. Log the AI interaction in DB (BR-904, BR-906)
-    const conversationLog = await deps.aiConversationRepository.create({
-      userId: input.userId,
-      provider: prompt.provider,
-      model: input.options?.model || (prompt.provider === 'openai' ? 'gpt-4o-mini' : prompt.provider === 'google' ? 'gemini-1.5-flash' : 'claude-3-5-sonnet-20241022'),
-      promptId: prompt.id,
-      input: filledPromptText,
-      response: response.text,
-      tokenUsage: response.tokenUsage,
-      estimatedCost: response.estimatedCost,
-    });
+    // 5. AI interaction logging is handled by CredentialResolver automatically (BR-904, BR-906)
+    // No manual logging needed — the resolver logs provider, model, tokens, cost, and credentialId.
 
     // 6. Increment Prompt Usage statistics (BR-700 tracking)
     await deps.promptRepository.incrementUsageCount(prompt.id).catch((err) => {
@@ -95,7 +87,6 @@ export async function generateContent(
     return {
       success: true,
       text: response.text,
-      conversationId: conversationLog.id,
     };
   } catch (err: any) {
     return {

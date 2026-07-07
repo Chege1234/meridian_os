@@ -5,7 +5,7 @@ import type {
   AiConversationRepository,
   ActivityLogRepository,
 } from '@/domain/repositories';
-import { createAiClient } from '@/infrastructure/ai/AiClientFactory';
+import type { AiClient } from '@/infrastructure/ai/AiClient';
 import { validateProposedActions } from '@/domain/rules/AgentRules';
 
 interface Dependencies {
@@ -13,6 +13,7 @@ interface Dependencies {
   promptRepository: PromptRepository;
   aiConversationRepository: AiConversationRepository;
   activityLogRepository: ActivityLogRepository;
+  aiClient: AiClient;
 }
 
 interface RunAgentInput {
@@ -84,12 +85,13 @@ Do not wrap your JSON in markdown code blocks or add any additional conversation
 
     const fullPromptInput = `${systemInstruction}\n\nUser Context / Input:\n${filledPromptText}`;
 
-    // 4. Invoke the pluggable AI client
-    const aiClient = createAiClient(prompt.provider);
-    const model = prompt.provider === 'openai' ? 'gpt-4o-mini' : prompt.provider === 'google' ? 'gemini-1.5-flash' : 'claude-3-5-sonnet-20241022';
-    const completion = await aiClient.complete(fullPromptInput, {
-      model,
+    // 4. Invoke the AI client via CredentialResolver (respects provider_credentials priority)
+    const completion = await deps.aiClient.complete(fullPromptInput, {
       temperature: 0.2, // Low temperature for structured JSON output
+      context: {
+        callType: 'internal', // Agent reasoning = internal (enables cross-provider fallback)
+        modelTier: 'fast',
+      },
     });
 
     // 5. Parse JSON response
@@ -136,17 +138,8 @@ Do not wrap your JSON in markdown code blocks or add any additional conversation
       estimatedCost: completion.estimatedCost,
     });
 
-    // 8. Log the AI interaction in DB (BR-904, BR-906)
-    await deps.aiConversationRepository.create({
-      userId: input.userId,
-      provider: prompt.provider,
-      model,
-      promptId: prompt.id,
-      input: fullPromptInput,
-      response: completion.text,
-      tokenUsage: completion.tokenUsage,
-      estimatedCost: completion.estimatedCost,
-    });
+    // 8. AI interaction logging is handled by CredentialResolver automatically (BR-904, BR-906)
+    // No manual logging needed — the resolver logs provider, model, tokens, cost, and credentialId.
 
     // 9. Increment Prompt Usage statistics (BR-700 tracking)
     await deps.promptRepository.incrementUsageCount(prompt.id).catch((err) => {

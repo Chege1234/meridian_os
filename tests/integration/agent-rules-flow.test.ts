@@ -9,14 +9,9 @@ import {
   createSupabaseActivityLogRepository,
   createSupabaseAiConversationRepository,
 } from '@/infrastructure/repositories';
-import { createAiClient } from '@/infrastructure/ai/AiClientFactory';
 
 vi.mock('@/infrastructure/supabase/server', () => ({
   createClient: vi.fn(),
-}));
-
-vi.mock('@/infrastructure/ai/AiClientFactory', () => ({
-  createAiClient: vi.fn(),
 }));
 
 describe('Agent Whitelist Filter Integration Flow', () => {
@@ -98,11 +93,11 @@ describe('Agent Whitelist Filter Integration Flow', () => {
         }),
         tokenUsage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
         estimatedCost: 0.0005,
+        credentialId: 'cred-123',
       }),
     };
 
     (createClient as any).mockResolvedValue(mockSupabase);
-    (createAiClient as any).mockReturnValue(mockAiClient);
 
     agentRepo = createSupabaseAgentRepository(mockSupabase);
     promptRepo = createSupabasePromptRepository(mockSupabase);
@@ -141,10 +136,22 @@ describe('Agent Whitelist Filter Integration Flow', () => {
         promptRepository: promptRepo,
         aiConversationRepository: aiConversationRepo,
         activityLogRepository: activityLogRepo,
+        aiClient: mockAiClient,
       }
     );
 
     expect(result.success).toBe(true);
     expect(mockAiClient.complete).toHaveBeenCalled();
+
+    // Verify the AI client was called with internal callType (cross-provider fallback enabled)
+    expect(mockAiClient.complete).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        context: {
+          callType: 'internal',
+          modelTier: 'fast',
+        },
+      }),
+    );
   });
 });

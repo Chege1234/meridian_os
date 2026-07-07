@@ -15,7 +15,9 @@ import {
   createSupabaseActivityLogRepository,
   createSupabasePromptRepository,
   createSupabaseAiConversationRepository,
+  createSupabaseProviderCredentialRepository,
 } from '@/infrastructure/repositories';
+import { CredentialResolver } from '@/infrastructure/ai/CredentialResolver';
 import { canWrite } from '@/domain/rules';
 import { createContentItem } from './application/CreateContentItem';
 import { updateContentItem } from './application/UpdateContentItem';
@@ -237,7 +239,16 @@ export async function generateContentAction(rawInput: GenerateContentSchemaInput
         ...input,
         userId: actor.id,
       },
-      { promptRepository, aiConversationRepository },
+      {
+        promptRepository,
+        aiConversationRepository,
+        aiClient: new CredentialResolver({
+          credentialRepository: createSupabaseProviderCredentialRepository(),
+          conversationRepository: aiConversationRepository,
+          userId: actor.id,
+          promptId: input.promptId,
+        }),
+      },
     );
 
     return result;

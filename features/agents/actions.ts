@@ -19,7 +19,9 @@ import {
   createSupabaseContentRepository,
   createSupabaseCampaignRepository,
   createSupabaseSopRepository,
+  createSupabaseProviderCredentialRepository,
 } from '@/infrastructure/repositories';
+import { CredentialResolver } from '@/infrastructure/ai/CredentialResolver';
 import { canWrite } from '@/domain/rules';
 
 // Import use cases
@@ -161,6 +163,11 @@ export async function runAgentAction(rawInput: RunAgentSchemaInput) {
         promptRepository,
         aiConversationRepository,
         activityLogRepository,
+        aiClient: new CredentialResolver({
+          credentialRepository: createSupabaseProviderCredentialRepository(),
+          conversationRepository: aiConversationRepository,
+          userId: actor.id,
+        }),
       },
     );
 
