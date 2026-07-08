@@ -5,6 +5,7 @@
  */
 
 export type ContactStatus = 'active' | 'archived';
+export type ContactSource = 'manual' | 'campus_marketplace';
 
 export interface Contact {
   readonly id: string;
@@ -14,11 +15,15 @@ export interface Contact {
   readonly phone: string | null;
   readonly status: ContactStatus;
   readonly notes: string | null;
-  readonly createdBy: string;
+  readonly createdBy: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly deletedAt: Date | null;
   readonly deletedBy: string | null;
+  readonly source: ContactSource;
+  readonly externalId: string | null;
+  readonly syncedAt: Date | null;
+  readonly metadata: Record<string, any> | null;
 }
 
 export interface CreateContactInput {
@@ -27,7 +32,11 @@ export interface CreateContactInput {
   readonly email?: string | null;
   readonly phone?: string | null;
   readonly notes?: string | null;
-  readonly createdBy: string;
+  readonly createdBy?: string | null;
+  readonly source?: ContactSource;
+  readonly externalId?: string | null;
+  readonly syncedAt?: Date | null;
+  readonly metadata?: Record<string, any> | null;
 }
 
 export interface UpdateContactInput {
@@ -37,4 +46,9 @@ export interface UpdateContactInput {
   readonly phone?: string | null;
   readonly status?: ContactStatus;
   readonly notes?: string | null;
+  readonly source?: ContactSource;
+  readonly externalId?: string | null;
+  readonly syncedAt?: Date | null;
+  readonly metadata?: Record<string, any> | null;
 }
+

@@ -47,7 +47,7 @@ export async function createContact(
 
     // 4. Log the activity (BR-1202)
     await deps.activityLogRepository.create({
-      userId: input.createdBy,
+      userId: input.createdBy ?? null,
       action: 'contact.create',
       module: 'crm',
       entity: 'contact',

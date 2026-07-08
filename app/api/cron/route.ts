@@ -8,8 +8,12 @@ import {
   createSupabaseTaskRepository,
   createSupabaseContentRepository,
   createSupabaseCampaignRepository,
+  createSupabaseSettingRepository,
+  createSupabaseContactRepository,
 } from '@/infrastructure/repositories';
+import { getSetting, updateSetting, syncMarketplaceContact } from '@/application/use-cases';
 import { eventBus } from '@/shared/utils';
+import postgres from 'postgres';
 
 export async function GET(request: Request) {
   try {
@@ -116,6 +120,93 @@ export async function GET(request: Request) {
         }
       } catch (err: any) {
         results.errors.push(`Automation ${auto.id} error: ${err.message}`);
+      }
+    }
+
+    // 3. Sync contacts from Campus Marketplace
+    const marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
+    if (marketplaceDbUrl) {
+      const settingRepository = createSupabaseSettingRepository(supabase);
+      const contactRepository = createSupabaseContactRepository(supabase);
+
+      const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository });
+      const lastSyncTimestamp = lastSyncSetting?.value || '1970-01-01T00:00:00Z';
+
+      const cmClient = postgres(marketplaceDbUrl, { prepare: false });
+      try {
+        const rows = await cmClient`
+          select id, username, email, phone, role, avatar, is_verified, created_at, student_id, preferred_language, last_seen_at, account_status, home_town 
+          from users 
+          where is_verified = true and created_at > ${lastSyncTimestamp} 
+          order by created_at asc
+        `;
+
+        results.marketplaceSync = {
+          queriedRows: rows.length,
+          syncedRows: 0,
+          skippedRows: 0,
+        };
+
+        let maxCreatedAt: Date | null = null;
+        let allSucceeded = true;
+
+        for (const row of rows) {
+          try {
+            const syncResult = await syncMarketplaceContact(
+              {
+                id: row.id.toString(),
+                username: row.username,
+                email: row.email,
+                phone: row.phone,
+                role: row.role,
+                avatar: row.avatar,
+                isVerified: row.is_verified,
+                createdAt: new Date(row.created_at),
+                studentId: row.student_id,
+                preferredLanguage: row.preferred_language,
+                lastSeenAt: row.last_seen_at ? new Date(row.last_seen_at) : null,
+                accountStatus: row.account_status,
+                homeTown: row.home_town,
+              },
+              { contactRepository, activityLogRepository }
+            );
+
+            if (!syncResult.success) {
+              allSucceeded = false;
+              results.errors.push(`Marketplace contact sync failed for ID ${row.id}: ${syncResult.error}`);
+              break;
+            }
+
+            if (syncResult.skipped) {
+              results.marketplaceSync.skippedRows++;
+            } else {
+              results.marketplaceSync.syncedRows++;
+            }
+
+            const rowCreatedAt = new Date(row.created_at);
+            if (!maxCreatedAt || rowCreatedAt > maxCreatedAt) {
+              maxCreatedAt = rowCreatedAt;
+            }
+          } catch (err: any) {
+            allSucceeded = false;
+            results.errors.push(`Marketplace contact sync error for ID ${row.id}: ${err.message}`);
+            break;
+          }
+        }
+
+        if (allSucceeded && maxCreatedAt) {
+          await updateSetting(
+            {
+              key: 'campus_marketplace_last_sync',
+              value: maxCreatedAt.toISOString(),
+            },
+            { settingRepository }
+          );
+        }
+      } catch (err: any) {
+        results.errors.push(`Marketplace database query failed: ${err.message}`);
+      } finally {
+        await cmClient.end();
       }
     }
 

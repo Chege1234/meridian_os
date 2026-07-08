@@ -58,8 +58,12 @@ export function createSupabaseContactRepository(
           email: data.email ?? null,
           phone: data.phone ?? null,
           notes: data.notes ?? null,
-          created_by: data.createdBy,
+          created_by: data.createdBy ?? null,
           status: 'active',
+          source: data.source ?? 'manual',
+          external_id: data.externalId ?? null,
+          synced_at: data.syncedAt ? data.syncedAt.toISOString() : null,
+          metadata: data.metadata ?? null,
         })
         .select('*')
         .single();
@@ -85,6 +89,10 @@ export function createSupabaseContactRepository(
       if (data.phone !== undefined) dbData.phone = data.phone;
       if (data.status !== undefined) dbData.status = data.status;
       if (data.notes !== undefined) dbData.notes = data.notes;
+      if (data.source !== undefined) dbData.source = data.source;
+      if (data.externalId !== undefined) dbData.external_id = data.externalId;
+      if (data.syncedAt !== undefined) dbData.synced_at = data.syncedAt ? data.syncedAt.toISOString() : null;
+      if (data.metadata !== undefined) dbData.metadata = data.metadata;
 
       const { data: row } = await supabase
         .from('contacts')
@@ -137,6 +145,16 @@ export function createSupabaseContactRepository(
 
       return (data ?? []).map(mapToContact);
     },
+
+    async findByExternalId(externalId: string): Promise<Contact[]> {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('external_id', externalId)
+        .is('deleted_at', null);
+
+      return (data ?? []).map(mapToContact);
+    },
   };
 }
 
@@ -155,5 +173,9 @@ function mapToContact(row: any): Contact {
     updatedAt: new Date(row.updated_at),
     deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
     deletedBy: row.deleted_by,
+    source: row.source,
+    externalId: row.external_id,
+    syncedAt: row.synced_at ? new Date(row.synced_at) : null,
+    metadata: row.metadata,
   };
 }

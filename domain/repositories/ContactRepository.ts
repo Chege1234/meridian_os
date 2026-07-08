@@ -22,4 +22,6 @@ export interface ContactRepository {
     name?: string,
     organization?: string | null,
   ): Promise<Contact[]>;
+  findByExternalId(externalId: string): Promise<Contact[]>;
 }
+

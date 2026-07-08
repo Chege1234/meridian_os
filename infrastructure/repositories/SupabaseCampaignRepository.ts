@@ -319,6 +319,10 @@ function mapToContact(row: any): Contact {
     updatedAt: new Date(row.updated_at),
     deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
     deletedBy: row.deleted_by,
+    source: row.source ?? 'manual',
+    externalId: row.external_id ?? null,
+    syncedAt: row.synced_at ? new Date(row.synced_at) : null,
+    metadata: row.metadata ?? null,
   };
 }
 

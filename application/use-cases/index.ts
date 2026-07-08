@@ -8,3 +8,6 @@ export { assignRole } from './AssignRole';
 export { recordActivityLog } from './RecordActivityLog';
 export { getSetting } from './GetSetting';
 export { updateSetting } from './UpdateSetting';
+export { syncMarketplaceContact } from './SyncMarketplaceContact';
+export type { SyncMarketplaceContactInput } from './SyncMarketplaceContact';
+

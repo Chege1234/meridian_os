@@ -17,6 +17,10 @@ describe('ContactRules — detectDuplicates', () => {
       updatedAt: new Date(),
       deletedAt: null,
       deletedBy: null,
+      source: 'manual',
+      externalId: null,
+      syncedAt: null,
+      metadata: null,
     },
     {
       id: 'contact-2',
@@ -31,6 +35,10 @@ describe('ContactRules — detectDuplicates', () => {
       updatedAt: new Date(),
       deletedAt: null,
       deletedBy: null,
+      source: 'manual',
+      externalId: null,
+      syncedAt: null,
+      metadata: null,
     },
   ];
 
