@@ -799,42 +799,78 @@ function AssetSection({
       </h2>
       {assets.length > 0 ? (
         <div className="flex flex-wrap gap-3">
-          {assets.map((asset) => (
-            <Card key={asset.id} className="p-3 border-border/60 group flex items-start gap-3 w-full sm:w-[280px] flex-shrink-0">
-              {type === 'logo' && (
-                <div className="h-16 w-16 rounded-md bg-muted/20 border border-border/40 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {asset.media ? (
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.media.storagePath}`}
-                      alt={asset.name}
-                      className="max-h-full max-w-full object-contain p-1"
-                    />
-                  ) : (
-                    <IconComponent className="h-6 w-6 text-muted-foreground/30" />
-                  )}
-                </div>
-              )}
-              <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
-                    <button
-                      onClick={() => onDelete(asset.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+          {assets.map((asset) => {
+            if (type === 'logo') {
+              return (
+                <Card key={asset.id} className="w-[140px] flex-shrink-0 group overflow-hidden border-border/60 hover:border-primary/40 transition-all cursor-default flex flex-col justify-between">
+                  <div>
+                    {/* Thumbnail / Icon */}
+                    <div className="h-24 bg-muted/20 flex items-center justify-center overflow-hidden border-b border-border/40">
+                      {asset.media ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.media.storagePath}`}
+                          alt={asset.name}
+                          className="max-h-full max-w-full object-contain p-1.5"
+                        />
+                      ) : (
+                        <IconComponent className="h-8 w-8 text-muted-foreground/30" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="p-2">
+                      <div className="flex items-center justify-between gap-1">
+                        <h3 className="text-xs font-medium text-foreground truncate flex-1" title={asset.name}>
+                          {asset.name}
+                        </h3>
+                        <button
+                          onClick={() => onDelete(asset.id)}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                      {asset.description && (
+                        <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5" title={asset.description}>
+                          {asset.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  {asset.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{asset.description}</p>
-                  )}
+                  <div className="px-2 pb-2">
+                    <p className="text-[8px] text-muted-foreground">
+                      Added {new Date(asset.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Card>
+              );
+            }
+
+            // Other types (template, guideline_doc) use the compact horizontal row layout
+            return (
+              <Card key={asset.id} className="p-3 border-border/60 group flex items-start gap-3 w-full sm:w-[280px] flex-shrink-0">
+                <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
+                      <button
+                        onClick={() => onDelete(asset.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    {asset.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{asset.description}</p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Added {new Date(asset.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  Added {new Date(asset.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <EmptyState label={`No ${label.toLowerCase()}`} />
