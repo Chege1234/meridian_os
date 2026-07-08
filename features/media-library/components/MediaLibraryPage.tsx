@@ -382,7 +382,7 @@ export function MediaLibraryPage() {
                       <div className="aspect-square bg-muted/30 flex items-center justify-center overflow-hidden">
                         {isImage ? (
                           <img
-                            src={asset.storagePath}
+                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
                             alt={asset.altText || asset.filename}
                             className="w-full h-full object-cover"
                             loading="lazy"

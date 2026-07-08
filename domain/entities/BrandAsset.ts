@@ -47,6 +47,7 @@ export interface BrandAsset {
   readonly updatedAt: Date;
   readonly deletedAt: Date | null;
   readonly deletedBy: string | null;
+  readonly media?: { readonly storagePath: string; readonly filename: string } | null;
 }
 
 export interface BrandGuideline {

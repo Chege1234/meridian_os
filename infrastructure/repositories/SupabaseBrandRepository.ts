@@ -26,7 +26,7 @@ export function createSupabaseBrandAssetRepository(
     async findById(id: string): Promise<BrandAsset | null> {
       const { data } = await supabase
         .from('brand_assets')
-        .select('*')
+        .select('*, media:media_id(*)')
         .eq('id', id)
         .is('deleted_at', null)
         .single();
@@ -34,7 +34,7 @@ export function createSupabaseBrandAssetRepository(
     },
 
     async findAll(options?: { type?: BrandAssetType; includeDeleted?: boolean }): Promise<BrandAsset[]> {
-      let query = supabase.from('brand_assets').select('*');
+      let query = supabase.from('brand_assets').select('*, media:media_id(*)');
 
       if (!options?.includeDeleted) {
         query = query.is('deleted_at', null);
@@ -58,7 +58,7 @@ export function createSupabaseBrandAssetRepository(
           description: input.description ?? null,
           created_by: input.createdBy,
         })
-        .select('*')
+        .select('*, media:media_id(*)')
         .single();
 
       if (error || !data) {
@@ -82,7 +82,7 @@ export function createSupabaseBrandAssetRepository(
         .from('brand_assets')
         .update(dbData)
         .eq('id', id)
-        .select('*')
+        .select('*, media:media_id(*)')
         .single();
 
       return data ? mapToAsset(data) : null;
@@ -192,6 +192,10 @@ function mapToAsset(row: any): BrandAsset {
     updatedAt: new Date(row.updated_at),
     deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
     deletedBy: row.deleted_by ?? null,
+    media: row.media ? {
+      storagePath: row.media.storage_path,
+      filename: row.media.filename,
+    } : null,
   };
 }
 

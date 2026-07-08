@@ -37,7 +37,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui';
-import type { BrandAsset, BrandGuideline, ActiveBrandKit, BrandAssetType } from '@/domain/entities';
+import type { BrandAsset, BrandGuideline, ActiveBrandKit, BrandAssetType, MediaAsset } from '@/domain/entities';
+import { MediaPickerModal } from '@/features/media-library/components/MediaPickerModal';
 import {
   getBrandKitAction,
   getBrandGuidelinesAction,
@@ -86,6 +87,11 @@ export function BrandCenterPage() {
   // Font-specific state
   const [fontFamily, setFontFamily] = useState('');
   const [fontWeights, setFontWeights] = useState('400, 500, 600, 700');
+
+  // Media picker state
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<MediaAsset | null>(null);
+
 
   // Guideline editor
   const [showGuidelineEditor, setShowGuidelineEditor] = useState(false);
@@ -138,6 +144,7 @@ export function BrandCenterPage() {
       type: newAssetType,
       name: newAssetName.trim(),
       description: newAssetDesc || undefined,
+      mediaId: selectedMedia?.id || undefined,
       value,
     });
 
@@ -158,6 +165,7 @@ export function BrandCenterPage() {
     setPaletteColors([{ name: 'Primary', hex: '#6366f1' }]);
     setFontFamily('');
     setFontWeights('400, 500, 600, 700');
+    setSelectedMedia(null);
   }
 
   async function handleDeleteAsset(id: string) {
@@ -546,12 +554,64 @@ export function BrandCenterPage() {
               value={newAssetName}
               onChange={(e) => setNewAssetName(e.target.value)}
             />
-            <Input
+             <Input
               id="brand-asset-desc"
               placeholder="Description (optional)"
               value={newAssetDesc}
               onChange={(e) => setNewAssetDesc(e.target.value)}
             />
+
+            {/* Logo/Template Media Picker */}
+            {(newAssetType === 'logo' || newAssetType === 'template') && (
+              <div className="space-y-1.5 p-3 bg-muted/30 rounded-lg border border-border/40">
+                <span className="text-xs font-medium text-muted-foreground block">
+                  Media File
+                </span>
+                {selectedMedia ? (
+                  <div className="flex items-center justify-between p-2 bg-background rounded-md border border-border/60">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {selectedMedia.mimeType.startsWith('image/') ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${selectedMedia.storagePath}`}
+                          alt={selectedMedia.filename}
+                          className="w-10 h-10 rounded object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                          <Image className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate">{selectedMedia.filename}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {selectedMedia.mimeType}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedMedia(null)}
+                      className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMediaPicker(true)}
+                    className="w-full gap-1.5"
+                  >
+                    <Image className="h-4 w-4" />
+                    Select Image/File from Media Library
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Color Palette Editor */}
             {newAssetType === 'color_palette' && (
@@ -703,6 +763,14 @@ export function BrandCenterPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Media Picker Modal */}
+      <MediaPickerModal
+        open={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(asset) => setSelectedMedia(asset)}
+        mimeFilter={newAssetType === 'logo' ? 'image/' : undefined}
+      />
     </div>
   );
 }
@@ -732,20 +800,31 @@ function AssetSection({
       {assets.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {assets.map((asset) => (
-            <Card key={asset.id} className="p-4 border-border/60 group">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
-                <button
-                  onClick={() => onDelete(asset.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+            <Card key={asset.id} className="p-4 border-border/60 group flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
+                  <button
+                    onClick={() => onDelete(asset.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {type === 'logo' && asset.media && (
+                  <div className="aspect-[3/2] w-full rounded-md bg-muted/30 border border-border/40 flex items-center justify-center overflow-hidden mb-3">
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.media.storagePath}`}
+                      alt={asset.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                )}
+                {asset.description && (
+                  <p className="text-xs text-muted-foreground mb-2">{asset.description}</p>
+                )}
               </div>
-              {asset.description && (
-                <p className="text-xs text-muted-foreground mb-2">{asset.description}</p>
-              )}
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground mt-2">
                 Added {new Date(asset.createdAt).toLocaleDateString()}
               </p>
             </Card>

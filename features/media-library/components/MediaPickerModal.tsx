@@ -166,7 +166,7 @@ export function MediaPickerModal({
                     <div className="aspect-square rounded-md bg-muted/50 flex items-center justify-center overflow-hidden mb-2">
                       {isImage ? (
                         <img
-                          src={asset.storagePath}
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
                           alt={asset.altText || asset.filename}
                           className="w-full h-full object-cover"
                         />
