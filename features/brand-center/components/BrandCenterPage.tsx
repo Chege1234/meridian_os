@@ -798,9 +798,9 @@ function AssetSection({
         {label}
       </h2>
       {assets.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap gap-3">
           {assets.map((asset) => (
-            <Card key={asset.id} className="p-3 border-border/60 group flex items-start gap-3">
+            <Card key={asset.id} className="p-3 border-border/60 group flex items-start gap-3 w-full sm:w-[280px] flex-shrink-0">
               {type === 'logo' && (
                 <div className="h-16 w-16 rounded-md bg-muted/20 border border-border/40 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {asset.media ? (
