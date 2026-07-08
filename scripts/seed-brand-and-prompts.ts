@@ -56,12 +56,14 @@ async function main() {
       .where(and(eq(providerCredentials.status, 'active'), isNull(providerCredentials.deletedAt)));
 
     let selectedProvider: 'openai' | 'anthropic' | 'google' | 'nvidia' = 'openai';
-    if (activeCredentials.length > 0) {
-      selectedProvider = activeCredentials[0].provider as any;
+    const firstCredential = activeCredentials[0];
+    if (firstCredential) {
+      selectedProvider = firstCredential.provider as any;
       console.log(`Resolved configured AI provider: ${selectedProvider}`);
     } else {
       console.log(`No active provider credentials found in provider_credentials. Defaulting prompts to 'openai'.`);
     }
+
 
     // 5. Seed BRAND GUIDELINE
     const guidelineTitle = 'CampusMarket Brand Guidelines';
