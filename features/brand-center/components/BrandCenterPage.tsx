@@ -800,33 +800,39 @@ function AssetSection({
       {assets.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {assets.map((asset) => (
-            <Card key={asset.id} className="p-4 border-border/60 group flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
-                  <button
-                    onClick={() => onDelete(asset.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                {type === 'logo' && asset.media && (
-                  <div className="aspect-[3/2] w-full rounded-md bg-muted/30 border border-border/40 flex items-center justify-center overflow-hidden mb-3">
+            <Card key={asset.id} className="p-3 border-border/60 group flex items-start gap-3">
+              {type === 'logo' && (
+                <div className="h-16 w-16 rounded-md bg-muted/20 border border-border/40 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {asset.media ? (
                     <img
                       src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.media.storagePath}`}
                       alt={asset.name}
-                      className="max-h-full max-w-full object-contain"
+                      className="max-h-full max-w-full object-contain p-1"
                     />
+                  ) : (
+                    <IconComponent className="h-6 w-6 text-muted-foreground/30" />
+                  )}
+                </div>
+              )}
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-foreground truncate">{asset.name}</h3>
+                    <button
+                      onClick={() => onDelete(asset.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                )}
-                {asset.description && (
-                  <p className="text-xs text-muted-foreground mb-2">{asset.description}</p>
-                )}
+                  {asset.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{asset.description}</p>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Added {new Date(asset.createdAt).toLocaleDateString()}
+                </p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2">
-                Added {new Date(asset.createdAt).toLocaleDateString()}
-              </p>
             </Card>
           ))}
         </div>

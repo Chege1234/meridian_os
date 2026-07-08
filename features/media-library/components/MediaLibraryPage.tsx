@@ -369,7 +369,7 @@ export function MediaLibraryPage() {
                 <p className="text-xs mt-1">Drag and drop files here or click Upload</p>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
                 {assets.map((asset) => {
                   const IconComponent = getFileIcon(asset.mimeType);
                   const isImage = asset.mimeType.startsWith('image/');
@@ -379,16 +379,16 @@ export function MediaLibraryPage() {
                       className="group relative overflow-hidden border-border/60 hover:border-primary/40 transition-all cursor-default"
                     >
                       {/* Thumbnail / Icon */}
-                      <div className="aspect-square bg-muted/30 flex items-center justify-center overflow-hidden">
+                      <div className="h-24 bg-muted/20 flex items-center justify-center overflow-hidden">
                         {isImage ? (
                           <img
                             src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
                             alt={asset.altText || asset.filename}
-                            className="w-full h-full object-cover"
+                            className="max-h-full max-w-full object-contain p-1.5"
                             loading="lazy"
                           />
                         ) : (
-                          <IconComponent className="h-10 w-10 text-muted-foreground/40" />
+                          <IconComponent className="h-8 w-8 text-muted-foreground/30" />
                         )}
                       </div>
                       {/* Info */}

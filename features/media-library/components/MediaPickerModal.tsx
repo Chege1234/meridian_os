@@ -146,7 +146,7 @@ export function MediaPickerModal({
               <p className="text-sm">No media assets found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 p-1">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 p-1">
               {assets.map((asset) => {
                 const isSelected = selected.has(asset.id);
                 const IconComponent = getFileIcon(asset.mimeType);
@@ -163,15 +163,15 @@ export function MediaPickerModal({
                     onClick={() => handleSelect(asset)}
                   >
                     {/* Thumbnail / Icon */}
-                    <div className="aspect-square rounded-md bg-muted/50 flex items-center justify-center overflow-hidden mb-2">
+                    <div className="h-20 bg-muted/30 rounded-md flex items-center justify-center overflow-hidden mb-2">
                       {isImage ? (
                         <img
                           src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
                           alt={asset.altText || asset.filename}
-                          className="w-full h-full object-cover"
+                          className="max-h-full max-w-full object-contain p-1"
                         />
                       ) : (
-                        <IconComponent className="h-8 w-8 text-muted-foreground/60" />
+                        <IconComponent className="h-6 w-6 text-muted-foreground/40" />
                       )}
                     </div>
 
