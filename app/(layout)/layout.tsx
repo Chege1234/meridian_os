@@ -6,8 +6,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { getAuthUser } from '@/infrastructure/auth';
-import { createClient } from '@/infrastructure/supabase/server';
+import { getAuthUser, getCachedUserProfile } from '@/infrastructure/auth';
 import { AuthenticatedShell } from './AuthenticatedShell';
 
 export default async function AuthenticatedLayout({
@@ -21,13 +20,8 @@ export default async function AuthenticatedLayout({
     redirect('/login');
   }
 
-  /* Fetch user profile from our users table */
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, email, avatar')
-    .eq('id', authUser.id)
-    .single();
+  /* Fetch user profile from our users table using cached query */
+  const profile = await getCachedUserProfile(authUser.id);
 
   const user = profile
     ? {

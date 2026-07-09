@@ -6,7 +6,13 @@
  * Per BR-005: every login creates an audit log.
  */
 
+import { cache } from 'react';
 import { createClient } from '@/infrastructure/supabase/server';
+
+// Global short-lived in-memory caches to eliminate Supabase network overhead on page transitions
+const verifiedUserCache = new Map<string, { user: any; expiresAt: number }>();
+const profileCache = new Map<string, { profile: any; expiresAt: number }>();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 interface SignInResult {
   success: boolean;
@@ -83,6 +89,21 @@ export async function signIn(
  */
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (token) {
+      verifiedUserCache.delete(token);
+    }
+    const userId = session?.user?.id;
+    if (userId) {
+      profileCache.delete(userId);
+    }
+  } catch (err) {
+    console.error('Error clearing auth cache on signOut:', err);
+  }
   await supabase.auth.signOut();
 }
 
@@ -99,11 +120,85 @@ export async function getSession() {
 
 /**
  * Get the current authenticated user from Supabase Auth.
+ * Uses a short-lived memory cache to prevent sequential network requests on layout/page renders.
  */
-export async function getAuthUser() {
+export const getAuthUser = cache(async (bypassCache = false) => {
   const supabase = await createClient();
+
+  if (bypassCache) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const token = session?.access_token;
+  if (!token) return null;
+
+  const now = Date.now();
+  const cached = verifiedUserCache.get(token);
+  if (cached && cached.expiresAt > now) {
+    return cached.user;
+  }
+
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    verifiedUserCache.delete(token);
+    return null;
+  }
+
+  verifiedUserCache.set(token, {
+    user,
+    expiresAt: now + CACHE_TTL_MS,
+  });
+
   return user;
-}
+});
+
+/**
+ * Get the cached user profile with roles, resolving from memory if available.
+ */
+export const getCachedUserProfile = cache(async (userId: string, bypassCache = false) => {
+  if (bypassCache) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('users')
+      .select('full_name, email, avatar, roles(id, name)')
+      .eq('id', userId)
+      .is('deleted_at', null)
+      .single();
+    return data;
+  }
+
+  const now = Date.now();
+  const cached = profileCache.get(userId);
+  if (cached && cached.expiresAt > now) {
+    return cached.profile;
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('users')
+    .select('full_name, email, avatar, roles(id, name)')
+    .eq('id', userId)
+    .is('deleted_at', null)
+    .single();
+
+  if (data) {
+    profileCache.set(userId, {
+      profile: data,
+      expiresAt: now + CACHE_TTL_MS,
+    });
+  }
+
+  return data;
+});
+

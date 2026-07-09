@@ -6,8 +6,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { getAuthUser } from '@/infrastructure/auth';
-import { createClient } from '@/infrastructure/supabase/server';
+import { getAuthUser, getCachedUserProfile } from '@/infrastructure/auth';
 
 export const metadata = {
   title: 'Dashboard',
@@ -17,12 +16,7 @@ export default async function DashboardPage() {
   const authUser = await getAuthUser();
   if (!authUser) redirect('/login');
 
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, email, roles(name)')
-    .eq('id', authUser.id)
-    .single();
+  const profile = await getCachedUserProfile(authUser.id);
 
   const name = (profile?.full_name as string) ?? 'there';
   const rolesData = profile?.roles as { name: string } | { name: string }[] | null;
