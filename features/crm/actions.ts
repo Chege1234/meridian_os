@@ -15,7 +15,9 @@ import {
   createSupabaseTaskRepository,
   createSupabaseUserRepository,
   createSupabaseActivityLogRepository,
+  createSupabaseSettingRepository,
 } from '@/infrastructure/repositories';
+import { getSetting, syncMarketplaceContacts } from '@/application/use-cases';
 import { canWrite } from '@/domain/rules';
 import { createContact } from './application/CreateContact';
 import { updateContact } from './application/UpdateContact';
@@ -51,6 +53,25 @@ export async function getContactsAction(args: { search?: string; status?: string
   try {
     const { supabase } = await getAuthenticatedActor(false);
     const contactRepository = createSupabaseContactRepository(supabase);
+    const settingRepository = createSupabaseSettingRepository(supabase);
+    const activityLogRepository = createSupabaseActivityLogRepository(supabase);
+
+    // Auto-sync from Campus Marketplace if last sync was > 5 minutes ago
+    try {
+      const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository });
+      const lastSyncTimestamp = lastSyncSetting?.value || '1970-01-01T00:00:00Z';
+      const lastSyncDate = new Date(lastSyncTimestamp);
+
+      if (Date.now() - lastSyncDate.getTime() > 5 * 60 * 1000) {
+        await syncMarketplaceContacts({
+          contactRepository,
+          activityLogRepository,
+          settingRepository,
+        });
+      }
+    } catch (syncErr) {
+      console.error('[Auto Sync Error]', syncErr);
+    }
 
     const result = await searchContacts(args, { contactRepository });
     return result;

@@ -23,17 +23,27 @@ export default async function AuthenticatedLayout({
   /* Fetch user profile from our users table using cached query */
   const profile = await getCachedUserProfile(authUser.id);
 
-  const user = profile
-    ? {
-        fullName: profile.full_name as string,
-        email: profile.email as string,
-        avatar: profile.avatar as string | null,
+  const getDisplayName = (fullName: string | null | undefined, email: string | null | undefined) => {
+    const rawName = fullName || email;
+    if (!rawName) return 'User';
+    if (rawName.includes('@') || email === 'lewiskariuki04@gmail.com') {
+      if (email === 'lewiskariuki04@gmail.com' || rawName.split('@')[0].toLowerCase() === 'lewiskariuki04') {
+        return 'Lewis';
       }
-    : {
-        fullName: authUser.email ?? 'User',
-        email: authUser.email ?? '',
-        avatar: null,
-      };
+      const prefix = rawName.split('@')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return rawName;
+  };
+
+  const displayName = getDisplayName(profile?.full_name, profile?.email || authUser.email);
+
+  const user = {
+    fullName: displayName,
+    email: (profile?.email || authUser.email) as string,
+    avatar: (profile?.avatar || null) as string | null,
+  };
 
   return <AuthenticatedShell user={user}>{children}</AuthenticatedShell>;
 }
+

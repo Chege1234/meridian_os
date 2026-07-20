@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * Feature Component â€” Contacts Page
@@ -177,7 +177,14 @@ export function ContactsPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
             CRM
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">Contacts</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text flex items-center gap-3">
+            Contacts
+            {!loading && contacts.length > 0 && (
+              <span className="text-xs font-normal text-mer-muted bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/[0.08]">
+                {contacts.length} {contacts.length === 1 ? 'user' : 'users'}
+              </span>
+            )}
+          </h1>
           <p className="mt-1 text-sm text-mer-muted">Manage your organisations and contact list.</p>
         </div>
         <NewContactDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ['contacts'] })} />

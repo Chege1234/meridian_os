@@ -11,9 +11,8 @@ import {
   createSupabaseSettingRepository,
   createSupabaseContactRepository,
 } from '@/infrastructure/repositories';
-import { getSetting, updateSetting, syncMarketplaceContact } from '@/application/use-cases';
+import { getSetting, syncMarketplaceContacts } from '@/application/use-cases';
 import { eventBus } from '@/shared/utils';
-import postgres from 'postgres';
 
 export async function GET(request: Request) {
   try {
@@ -129,84 +128,26 @@ export async function GET(request: Request) {
       const settingRepository = createSupabaseSettingRepository(supabase);
       const contactRepository = createSupabaseContactRepository(supabase);
 
-      const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository });
-      const lastSyncTimestamp = lastSyncSetting?.value || '1970-01-01T00:00:00Z';
+      const syncRes = await syncMarketplaceContacts({
+        settingRepository,
+        contactRepository,
+        activityLogRepository,
+      });
 
-      const cmClient = postgres(marketplaceDbUrl, { prepare: false });
-      try {
-        const rows = await cmClient`
-          select id, username, email, phone, role, avatar, is_verified, created_at, student_id, preferred_language, last_seen_at, account_status, home_town 
-          from users 
-          where is_verified = true and created_at > ${lastSyncTimestamp} 
-          order by created_at asc
-        `;
-
+      if (syncRes.success) {
         results.marketplaceSync = {
-          queriedRows: rows.length,
-          syncedRows: 0,
-          skippedRows: 0,
+          queriedRows: syncRes.results?.queriedRows || 0,
+          syncedRows: syncRes.results?.syncedRows || 0,
+          skippedRows: syncRes.results?.skippedRows || 0,
         };
-
-        let maxCreatedAt: Date | null = null;
-        let allSucceeded = true;
-
-        for (const row of rows) {
-          try {
-            const syncResult = await syncMarketplaceContact(
-              {
-                id: row.id.toString(),
-                username: row.username,
-                email: row.email,
-                phone: row.phone,
-                role: row.role,
-                avatar: row.avatar,
-                isVerified: row.is_verified,
-                createdAt: new Date(row.created_at),
-                studentId: row.student_id,
-                preferredLanguage: row.preferred_language,
-                lastSeenAt: row.last_seen_at ? new Date(row.last_seen_at) : null,
-                accountStatus: row.account_status,
-                homeTown: row.home_town,
-              },
-              { contactRepository, activityLogRepository }
-            );
-
-            if (!syncResult.success) {
-              allSucceeded = false;
-              results.errors.push(`Marketplace contact sync failed for ID ${row.id}: ${syncResult.error}`);
-              break;
-            }
-
-            if (syncResult.skipped) {
-              results.marketplaceSync.skippedRows++;
-            } else {
-              results.marketplaceSync.syncedRows++;
-            }
-
-            const rowCreatedAt = new Date(row.created_at);
-            if (!maxCreatedAt || rowCreatedAt > maxCreatedAt) {
-              maxCreatedAt = rowCreatedAt;
-            }
-          } catch (err: any) {
-            allSucceeded = false;
-            results.errors.push(`Marketplace contact sync error for ID ${row.id}: ${err.message}`);
-            break;
-          }
+        if (syncRes.results?.errors && syncRes.results.errors.length > 0) {
+          results.errors.push(...syncRes.results.errors);
         }
-
-        if (allSucceeded && maxCreatedAt) {
-          await updateSetting(
-            {
-              key: 'campus_marketplace_last_sync',
-              value: maxCreatedAt.toISOString(),
-            },
-            { settingRepository }
-          );
+      } else {
+        results.errors.push(syncRes.error || 'Marketplace contact sync failed.');
+        if (syncRes.results?.errors) {
+          results.errors.push(...syncRes.results.errors);
         }
-      } catch (err: any) {
-        results.errors.push(`Marketplace database query failed: ${err.message}`);
-      } finally {
-        await cmClient.end();
       }
     }
 
