@@ -26,7 +26,7 @@ export async function syncMarketplaceContacts(deps: Dependencies) {
   const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository: deps.settingRepository });
   const lastSyncTimestamp = lastSyncSetting?.value || '1970-01-01T00:00:00Z';
 
-  const cmClient = postgres(marketplaceDbUrl, { prepare: false });
+  const cmClient = postgres(marketplaceDbUrl, { prepare: false, ssl: 'require' });
   const results = {
     queriedRows: 0,
     syncedRows: 0,
@@ -104,7 +104,9 @@ export async function syncMarketplaceContacts(deps: Dependencies) {
 
     return { success: true, results };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Marketplace database query failed.', results };
+    console.error('[Sync Marketplace Contacts Error]', err);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: errMsg || 'Marketplace database query failed.', results };
   } finally {
     await cmClient.end();
   }
