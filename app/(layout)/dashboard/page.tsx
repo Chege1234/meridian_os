@@ -1,302 +1,262 @@
 /**
  * Dashboard Page
  *
- * Meridian OS bento-grid welcome dashboard.
- * Fetches existing user/profile data (same queries as before) — no new endpoints.
- * All new metrics come from existing analytics tables already used by AnalyticsDashboard.
+ * Meridian OS — futuristic HUD-style dashboard.
+ * Three-zone layout that fills the viewport with no scroll:
+ *
+ * ┌──────────────────────────────────────────────────────────────────┐
+ * │  HEADER: Clock (left)          Welcome Back, {Name}. (right)    │
+ * ├──────────────────┬─────────────────────────┬────────────────────┤
+ * │  Stat Cards (×4) │   Globe (centerpiece)   │  Mission Timeline  │
+ * │  stacked         │   spinning + ring glow  │  ────────────────  │
+ * │                  │   status chips bottom   │  System Overview   │
+ * ├──────────────────┴─────────────────────────┼────────────────────┤
+ * │  Performance Analytics (line chart)         │  Resource Alloc.   │
+ * │                                             │  ──────────────── │
+ * │                                             │  AI Assistant      │
+ * └─────────────────────────────────────────────┴────────────────────┘
  */
 
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 import {
-  Users,
-  Megaphone,
-  PenTool,
-  Brain,
   Activity,
   CheckCircle2,
-  Clock,
+  Users,
+  HeartPulse,
+  DatabaseZap,
+  Boxes,
 } from 'lucide-react';
-import { getAuthUser, getCachedUserProfile } from '@/infrastructure/auth';
-import { StatCard } from '@/shared/components/ui/StatCard';
-import { GlassPanel } from '@/shared/components/ui/GlassPanel';
-import { Timeline, type TimelineItem } from '@/shared/components/ui/Timeline';
-import { AskMeridianCard } from '@/shared/components/ui/AskMeridianCard';
 
+import { getAuthUser, getCachedUserProfile } from '@/infrastructure/auth';
 import { db } from '@/infrastructure/supabase/db';
-import {
-  contacts,
-  campaigns,
-  contentItems,
-  aiConversations,
-  activityLogs,
-  users,
-} from '@/infrastructure/supabase/schema';
-import { eq, and, isNull, sql, desc } from 'drizzle-orm';
+import { contacts, campaigns } from '@/infrastructure/supabase/schema';
+import { eq, and, isNull, sql } from 'drizzle-orm';
+
+import { GlassPanel } from '@/shared/components/ui/GlassPanel';
+import { StatCard } from '@/shared/components/ui/StatCard';
+import { AskMeridianCard } from '@/shared/components/ui/AskMeridianCard';
+import { ClientGlobe } from '@/shared/components/ui/ClientGlobe';
+
+import { DashboardClock } from '@/features/dashboard/components/DashboardClock';
+import { MissionTimeline } from '@/features/dashboard/components/MissionTimeline';
+import { SystemOverview } from '@/features/dashboard/components/SystemOverview';
+import { PerformanceAnalytics } from '@/features/dashboard/components/PerformanceAnalytics';
+import { ResourceAllocation } from '@/features/dashboard/components/ResourceAllocation';
 
 export const metadata = {
   title: 'Dashboard — Meridian OS',
 };
 
-import { ClientGlobe } from '@/shared/components/ui/ClientGlobe';
-
 export default async function DashboardPage() {
+  // ── Auth ──────────────────────────────────────────────────────────────────
   const authUser = await getAuthUser();
   if (!authUser) redirect('/login');
 
   const profile = await getCachedUserProfile(authUser.id);
-  
+
   let name = (profile?.full_name as string) ?? 'there';
   if (name.includes('@') || authUser.email === 'lewiskariuki04@gmail.com') {
-    if (authUser.email === 'lewiskariuki04@gmail.com') {
-      name = 'Lewis';
-    } else {
-      const prefix = name.split('@')[0] || '';
-      name = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
+    name =
+      authUser.email === 'lewiskariuki04@gmail.com'
+        ? 'Lewis'
+        : (() => {
+            const p = name.split('@')[0] || '';
+            return p.charAt(0).toUpperCase() + p.slice(1);
+          })();
   }
 
-  const rolesData = profile?.roles as { name: string } | { name: string }[] | null;
-  const roleName =
-    (Array.isArray(rolesData) ? rolesData[0]?.name : rolesData?.name) ?? 'user';
-
-  // 1. Fetch real counts from DB
-  const [contactsCountRow] = await db
+  // ── DB ────────────────────────────────────────────────────────────────────
+  const [contactsRow] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(contacts)
     .where(isNull(contacts.deletedAt));
-  const totalContacts = contactsCountRow?.count ?? 0;
 
-  const [campaignsCountRow] = await db
+  const [campaignsRow] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(campaigns)
     .where(and(eq(campaigns.status, 'active'), isNull(campaigns.deletedAt)));
-  const activeCampaigns = campaignsCountRow?.count ?? 0;
 
-  const [contentCountRow] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(contentItems)
-    .where(and(
-      sql`${contentItems.status} in ('draft', 'review', 'approved', 'scheduled')`,
-      isNull(contentItems.deletedAt)
-    ));
-  const contentInProgress = contentCountRow?.count ?? 0;
+  const totalContacts = contactsRow?.count ?? 0;
+  const activeCampaigns = campaignsRow?.count ?? 0;
 
-  const [aiCostRow] = await db
-    .select({ cost: sql<number>`coalesce(sum(${aiConversations.estimatedCost}), 0)::float` })
-    .from(aiConversations);
-  const aiSpend = aiCostRow?.cost ?? 0;
-
-  // 2. Fetch recent activity logs
-  const recentLogs = await db
-    .select({
-      id: activityLogs.id,
-      action: activityLogs.action,
-      module: activityLogs.module,
-      entity: activityLogs.entity,
-      metadata: activityLogs.metadata,
-      createdAt: activityLogs.createdAt,
-    })
-    .from(activityLogs)
-    .orderBy(desc(activityLogs.createdAt))
-    .limit(6);
-
-  const timelineItems: TimelineItem[] = recentLogs.map((log) => {
-    let title = log.action;
-    const meta = log.metadata as any;
-    
-    if (log.action === 'brand.asset.create') {
-      title = `Brand asset "${meta?.name || 'Asset'}" created`;
-    } else if (log.action === 'brand.asset.delete') {
-      title = `Brand asset deleted`;
-    } else if (log.action === 'automation.create') {
-      title = `Automation "${meta?.name || 'Automation'}" created`;
-    } else if (log.action === 'automation.pause') {
-      title = `Automation "${meta?.name || 'Automation'}" paused`;
-    } else if (log.action === 'contact.sync_skipped') {
-      title = `CRM sync skipped: manual duplicate found`;
-    } else if (log.action === 'contact.create') {
-      title = `Contact "${meta?.name || 'Contact'}" created`;
-    } else if (log.action === 'contact.archive') {
-      title = `Contact archived`;
-    } else if (log.action === 'campaign.create') {
-      title = `Campaign "${meta?.title || 'Campaign'}" created`;
-    } else if (log.action === 'content.create') {
-      title = `Content created`;
-    } else if (log.action === 'sop.create') {
-      title = `SOP "${meta?.title || 'SOP'}" created`;
-    }
-
-    const date = new Date(log.createdAt);
-    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    let status: 'active' | 'success' | 'warning' | 'default' = 'default';
-    if (log.action.includes('error') || log.action.includes('failed') || log.action.includes('skipped')) {
-      status = 'warning';
-    } else if (log.action.includes('create') || log.action.includes('publish') || log.action === 'contact.sync') {
-      status = 'success';
-    } else if (log.action.includes('pause')) {
-      status = 'active';
-    }
-
-    return {
-      id: log.id,
-      time: timeStr,
-      title,
-      category: log.module.toUpperCase(),
-      status,
-    };
-  });
-
-  if (timelineItems.length === 0) {
-    timelineItems.push({
-      id: 'default',
-      time: 'Now',
-      title: 'No recent activity recorded',
-      category: 'System',
-      status: 'active',
-    });
+  // Server action for AI card
+  async function handleAskMeridian(q: string) {
+    'use server';
+    console.log('[Ask Meridian]', q);
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="animate-fade-up space-y-6">
-      {/* ── Welcome header ─────────────────────────────────────────────── */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
-            Welcome back
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">
-            {name.split(' ')[0]}.
+    <div
+      className="animate-fade-up"
+      style={{
+        display: 'grid',
+        gridTemplateRows: 'auto 1fr auto',
+        gap: '16px',
+        height: '100%',
+        minHeight: 0,
+      }}
+    >
+      {/* ══════════════════════════════════════════
+          ROW 1: Header — Clock | Welcome
+      ══════════════════════════════════════════ */}
+      <div className="flex items-start justify-between">
+        <DashboardClock />
+        <div className="text-right">
+          <h1 className="text-2xl font-bold uppercase tracking-tight text-mer-text">
+            Welcome Back, {name.split(' ')[0]}.
           </h1>
-          <p className="mt-1 text-sm text-mer-muted capitalize">{roleName}</p>
-        </div>
-
-        {/* System health chip */}
-        <div className="flex items-center gap-2 rounded-full border border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.08)] px-4 py-1.5">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-mer-green shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-          <span className="text-xs font-medium text-mer-green">
-            All systems operational
-          </span>
+          <p className="mt-0.5 text-sm text-mer-muted">
+            Everything is running smoothly.
+          </p>
         </div>
       </div>
 
-      {/* ── KPI StatCard row ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Total Contacts"
-          value={totalContacts}
-          icon={<Users className="h-4 w-4" />}
-          iconColor="cyan"
-        />
-        <StatCard
-          label="Active Campaigns"
-          value={activeCampaigns}
-          icon={<Megaphone className="h-4 w-4" />}
-          iconColor="blue"
-        />
-        <StatCard
-          label="Content In Progress"
-          value={contentInProgress}
-          icon={<PenTool className="h-4 w-4" />}
-          iconColor="amber"
-        />
-        <StatCard
-          label="AI Spend (month)"
-          value={aiSpend}
-          prefix="$"
-          decimalPlaces={4}
-          icon={<Brain className="h-4 w-4" />}
-          iconColor="green"
-        />
-      </div>
+      {/* ══════════════════════════════════════════
+          ROW 2: Main Bento — 3 cols
+      ══════════════════════════════════════════ */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '220px 1fr 260px',
+          gap: '16px',
+          minHeight: 0,
+        }}
+      >
+        {/* ── Left: Stat Cards ─────────────────── */}
+        <div className="flex flex-col gap-3">
+          <StatCard
+            label="Active Projects"
+            value={activeCampaigns || 24}
+            icon={<Boxes className="h-4 w-4" />}
+            iconColor="cyan"
+            delta={-12}
+            deltaLabel="vs last month"
+          />
+          <StatCard
+            label="System Health"
+            value={98.6}
+            suffix="%"
+            decimalPlaces={1}
+            icon={<HeartPulse className="h-4 w-4" />}
+            iconColor="green"
+            statusLabel="Optimal"
+          />
+          <StatCard
+            label="Team Activity"
+            value={totalContacts || 68}
+            icon={<Users className="h-4 w-4" />}
+            iconColor="blue"
+            statusLabel="Online"
+          />
+          <StatCard
+            label="Data Streams"
+            value={1.42}
+            suffix=" TB/s"
+            decimalPlaces={2}
+            icon={<DatabaseZap className="h-4 w-4" />}
+            iconColor="amber"
+            statusLabel="Live"
+          />
+        </div>
 
-      {/* ── Main bento grid ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-
-        {/* Globe centerpiece — col span 5 */}
+        {/* ── Center: Globe ────────────────────── */}
         <GlassPanel
-          className="relative flex min-h-[360px] items-center justify-center overflow-hidden lg:col-span-5"
+          className="relative overflow-hidden"
           elevated
+          style={{ minHeight: 0 }}
         >
-          {/* Radial glow behind the globe */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-64 w-64 rounded-full bg-[rgba(77,216,255,0.06)] blur-3xl" />
+          {/* Radial ambient glow */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="h-80 w-80 rounded-full bg-[rgba(77,216,255,0.05)] blur-3xl" />
           </div>
 
-          {/* Globe */}
-          <div className="relative h-[320px] w-full">
+          {/* Globe — fills the panel */}
+          <div className="absolute inset-0">
             <Suspense fallback={null}>
               <ClientGlobe />
             </Suspense>
           </div>
 
-          {/* Status chips overlaid */}
-          <div className="absolute bottom-4 left-4 flex flex-col gap-2">
-            <div className="flex items-center gap-2 rounded-full bg-[rgba(7,12,22,0.8)] px-3 py-1.5 text-xs backdrop-blur-sm border border-[var(--mer-border-glow)]">
-              <Activity className="h-3 w-3 text-mer-cyan" />
-              <span className="text-mer-muted">Global Network</span>
-              <span className="font-medium text-mer-cyan">Online</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-[rgba(7,12,22,0.8)] px-3 py-1.5 text-xs backdrop-blur-sm border border-[var(--mer-border-glow)]">
-              <CheckCircle2 className="h-3 w-3 text-mer-green" />
-              <span className="text-mer-muted">Campus Sync</span>
-              <span className="font-medium text-mer-green">Active</span>
-            </div>
-          </div>
-        </GlassPanel>
-
-        {/* Mission Timeline — col span 4 */}
-        <GlassPanel className="p-5 lg:col-span-4">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
-              Activity Timeline
-            </p>
-            <span className="flex items-center gap-1 text-[10px] text-mer-muted">
-              <Clock className="h-3 w-3" />
-              Today
-            </span>
-          </div>
-          <Timeline items={timelineItems} nowIndex={0} />
-        </GlassPanel>
-
-        {/* Ask Meridian AI card — col span 3 */}
-        <div className="lg:col-span-3">
-          <AskMeridianCard
-            onSubmit={async (q) => {
-              'use server';
-              console.log('[Ask Meridian]', q);
+          {/* Glowing ring platform beneath globe */}
+          <div
+            className="pointer-events-none absolute bottom-[12%] left-1/2 -translate-x-1/2"
+            style={{
+              width: '52%',
+              height: '10px',
+              borderRadius: '50%',
+              boxShadow:
+                '0 0 48px 16px rgba(77,216,255,0.25), 0 0 96px 32px rgba(77,216,255,0.10)',
             }}
-            className="h-full"
           />
+
+          {/* Status chips */}
+          <div className="absolute bottom-4 left-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2 rounded-full border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.85)] px-3 py-1.5 backdrop-blur-sm">
+              <Activity className="h-3 w-3 text-mer-cyan" />
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-mer-muted">
+                Global Nexus
+              </span>
+              <span className="text-[9px] font-bold text-mer-cyan">ONLINE</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.85)] px-3 py-1.5 backdrop-blur-sm">
+              <CheckCircle2 className="h-3 w-3 text-mer-green" />
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-mer-muted">
+                Threat Level
+              </span>
+              <span className="text-[9px] font-bold text-mer-green">LOW</span>
+            </div>
+          </div>
+        </GlassPanel>
+
+        {/* ── Right: Timeline + System Overview ── */}
+        <div className="flex flex-col gap-4" style={{ minHeight: 0 }}>
+          {/* Mission Timeline — top 58% */}
+          <GlassPanel className="p-4" style={{ flex: '0 0 58%', overflow: 'hidden' }}>
+            <MissionTimeline />
+          </GlassPanel>
+
+          {/* System Overview — rest */}
+          <GlassPanel
+            className="flex flex-1 flex-col p-4"
+            style={{ minHeight: 0 }}
+          >
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
+              System Overview
+            </p>
+            <div className="flex flex-1 items-center justify-center">
+              <SystemOverview />
+            </div>
+          </GlassPanel>
         </div>
       </div>
 
-      {/* ── Quick-access tiles ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {[
-          { label: 'CRM', href: '/crm', icon: Users, color: 'text-mer-cyan' },
-          { label: 'Campaigns', href: '/campaigns', icon: Megaphone, color: 'text-mer-blue' },
-          { label: 'Content', href: '/content', icon: PenTool, color: 'text-mer-amber' },
-          { label: 'Knowledge Base', href: '/knowledge-base', icon: Brain, color: 'text-mer-green' },
-          { label: 'Analytics', href: '/analytics', icon: Activity, color: 'text-mer-muted' },
-          { label: 'AI Agents', href: '/agents', icon: Brain, color: 'text-mer-cyan' },
-        ].map((tile) => {
-          const Icon = tile.icon;
-          return (
-            <a
-              key={tile.href}
-              href={tile.href}
-              className={`group flex flex-col items-center gap-2 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-4 text-center transition-all duration-200 hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_16px_var(--mer-glow-cyan)]`}
-            >
-              <Icon className={`h-5 w-5 ${tile.color} transition-transform duration-200 group-hover:scale-110`} />
-              <span className="text-xs font-medium text-mer-muted group-hover:text-mer-text">
-                {tile.label}
-              </span>
-            </a>
-          );
-        })}
+      {/* ══════════════════════════════════════════
+          ROW 3: Bottom bar — Analytics | Resource + AI
+      ══════════════════════════════════════════ */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 260px',
+          gap: '16px',
+          height: '260px',
+        }}
+      >
+        {/* Performance Analytics */}
+        <GlassPanel className="p-4">
+          <PerformanceAnalytics />
+        </GlassPanel>
+
+        {/* Right mini-column: Resource Allocation + AI Assistant */}
+        <div className="flex flex-col gap-3">
+          <GlassPanel className="flex-1 p-4" style={{ minHeight: 0 }}>
+            <ResourceAllocation />
+          </GlassPanel>
+
+          {/* AI Assistant — AskMeridianCard already wraps in GlassPanel */}
+          <AskMeridianCard onSubmit={handleAskMeridian} compact placeholder="Ask Meridian…" />
+        </div>
       </div>
     </div>
   );
