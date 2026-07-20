@@ -52,7 +52,7 @@ export default async function DashboardPage() {
     if (authUser.email === 'lewiskariuki04@gmail.com') {
       name = 'Lewis';
     } else {
-      const prefix = name.split('@')[0];
+      const prefix = name.split('@')[0] || '';
       name = prefix.charAt(0).toUpperCase() + prefix.slice(1);
     }
   }

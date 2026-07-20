@@ -27,11 +27,11 @@ export default async function AuthenticatedLayout({
     const rawName = fullName || email;
     if (!rawName) return 'User';
     if (rawName.includes('@') || email === 'lewiskariuki04@gmail.com') {
-      if (email === 'lewiskariuki04@gmail.com' || rawName.split('@')[0].toLowerCase() === 'lewiskariuki04') {
+      const firstPart = rawName.split('@')[0] || '';
+      if (email === 'lewiskariuki04@gmail.com' || firstPart.toLowerCase() === 'lewiskariuki04') {
         return 'Lewis';
       }
-      const prefix = rawName.split('@')[0];
-      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+      return firstPart.charAt(0).toUpperCase() + firstPart.slice(1);
     }
     return rawName;
   };
