@@ -23,9 +23,13 @@ export async function syncMarketplaceContacts(deps: Dependencies) {
     return { success: false, error: 'CAMPUS_MARKETPLACE_DATABASE_URL environment variable is missing.' };
   }
 
-  // Defensively rewrite port 5432 to 6543 (PgBouncer pooler port) for serverless compatibility
-  if (marketplaceDbUrl.includes(':5432/')) {
-    marketplaceDbUrl = marketplaceDbUrl.replace(':5432/', ':6543/');
+  // Defensively prepend 'db.' if the host is missing it (e.g. user-ref.supabase.co instead of db.user-ref.supabase.co)
+  const hostMatch = marketplaceDbUrl.match(/@([^:]+):/);
+  if (hostMatch) {
+    const host = hostMatch[1];
+    if (host.endsWith('.supabase.co') && !host.startsWith('db.')) {
+      marketplaceDbUrl = marketplaceDbUrl.replace(`@${host}:`, `@db.${host}:`);
+    }
   }
 
   const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository: deps.settingRepository });
