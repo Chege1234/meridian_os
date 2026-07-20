@@ -123,11 +123,7 @@ export async function GET(request: Request) {
     }
 
     // 3. Sync contacts from Campus Marketplace
-    const mainDbUrl = process.env.DATABASE_URL;
     const marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
-    console.log('Main DB Host:', mainDbUrl ? new URL(mainDbUrl).hostname : 'missing');
-    console.log('Campus DB Host:', marketplaceDbUrl ? new URL(marketplaceDbUrl).hostname : 'missing');
-
     if (marketplaceDbUrl) {
       const settingRepository = createSupabaseSettingRepository(supabase);
       const contactRepository = createSupabaseContactRepository(supabase);

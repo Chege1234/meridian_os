@@ -18,18 +18,9 @@ interface Dependencies {
 }
 
 export async function syncMarketplaceContacts(deps: Dependencies) {
-  let marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
+  const marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
   if (!marketplaceDbUrl) {
     return { success: false, error: 'CAMPUS_MARKETPLACE_DATABASE_URL environment variable is missing.' };
-  }
-
-  // Defensively prepend 'db.' if the host is missing it (e.g. user-ref.supabase.co instead of db.user-ref.supabase.co)
-  const hostMatch = marketplaceDbUrl.match(/@([^:]+):/);
-  if (hostMatch) {
-    const host = hostMatch[1];
-    if (host && host.endsWith('.supabase.co') && !host.startsWith('db.')) {
-      marketplaceDbUrl = marketplaceDbUrl.replace(`@${host}:`, `@db.${host}:`);
-    }
   }
 
   const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository: deps.settingRepository });
