@@ -8,9 +8,10 @@
  * All data wiring (useSidebarStore, NAVIGATION_ITEMS) is unchanged.
  */
 
+import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PanelLeftClose, PanelLeft } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useSidebarStore } from '@/shared/stores';
 import { NAVIGATION_ITEMS, type NavigationItem } from '@/config/navigation';
@@ -84,12 +85,16 @@ export function Sidebar() {
         aria-label="Main"
       >
         {mainItems.map((item) => (
-          <NavItem
-            key={item.href}
-            item={item}
-            isActive={pathname.startsWith(item.href)}
-            collapsed={collapsed}
-          />
+          <React.Fragment key={item.href}>
+            {item.label === 'Analytics' && (
+              <div className="my-3 mx-2 h-px bg-[var(--mer-border-glow)] opacity-30" />
+            )}
+            <NavItem
+              item={item}
+              isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
+              collapsed={collapsed}
+            />
+          </React.Fragment>
         ))}
       </nav>
 
@@ -98,8 +103,8 @@ export function Sidebar() {
         {workspaceItems.map((item) => (
           <NavItem
             key={item.href}
+            isActive={pathname === item.href || pathname.startsWith(item.href)}
             item={item}
-            isActive={pathname.startsWith(item.href)}
             collapsed={collapsed}
           />
         ))}
@@ -141,17 +146,14 @@ function NavItem({
       href={item.href}
       onMouseEnter={() => router.prefetch(item.href)}
       className={cn(
-        'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
+        'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
         'transition-all duration-150',
         isActive
           ? [
-              'bg-[rgba(77,216,255,0.08)] text-mer-cyan',
-              // Glowing left accent bar
-              'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px]',
-              'before:rounded-full before:bg-mer-cyan',
-              'before:shadow-[0_0_6px_rgba(77,216,255,0.8)]',
+              'bg-[rgba(77,216,255,0.06)] text-mer-cyan border border-[rgba(77,216,255,0.25)]',
+              'shadow-[0_0_12px_rgba(77,216,255,0.15)]',
             ]
-          : 'text-mer-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-mer-text',
+          : 'border border-transparent text-mer-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-mer-text',
         collapsed && 'justify-center px-0',
       )}
       title={collapsed ? item.label : undefined}
@@ -165,6 +167,9 @@ function NavItem({
       />
       {!collapsed && (
         <span className="truncate">{item.label}</span>
+      )}
+      {isActive && !collapsed && (
+        <ChevronRight className="ml-auto h-3 w-3 text-mer-cyan opacity-80" />
       )}
     </Link>
   );

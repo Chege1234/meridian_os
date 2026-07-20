@@ -45,9 +45,10 @@ export function UserMenu({ fullName, email, avatar, onSignOut }: UserMenuProps) 
         onClick={() => setOpen(!open)}
         className={cn(
           'inline-flex h-9 w-9 items-center justify-center rounded-full',
-          'bg-primary/10 text-primary text-xs font-semibold',
-          'transition-colors hover:bg-primary/20',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'bg-[rgba(7,12,22,0.6)] text-mer-cyan text-xs font-bold',
+          'border border-[rgba(77,216,255,0.3)] shadow-[0_0_10px_rgba(77,216,255,0.15)]',
+          'transition-all hover:bg-[rgba(77,216,255,0.1)] hover:border-[rgba(77,216,255,0.5)]',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mer-cyan cursor-pointer',
         )}
         aria-label="User menu"
         aria-expanded={open}
@@ -56,7 +57,7 @@ export function UserMenu({ fullName, email, avatar, onSignOut }: UserMenuProps) 
           <img
             src={avatar}
             alt={fullName}
-            className="h-9 w-9 rounded-full object-cover"
+            className="h-full w-full rounded-full object-cover"
           />
         ) : (
           initials

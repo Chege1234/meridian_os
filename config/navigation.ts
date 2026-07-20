@@ -6,7 +6,7 @@
  */
 
 import {
-  LayoutDashboard,
+  Home,
   Settings,
   BookOpen,
   Megaphone,
@@ -36,7 +36,7 @@ export const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   {
     label: 'Dashboard',
     href: '/dashboard',
-    icon: LayoutDashboard,
+    icon: Home,
     section: 'main',
   },
   {
