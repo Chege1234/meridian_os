@@ -587,7 +587,7 @@ export default function DashboardClient({ data }: DashboardClientProps) {
           </div>
 
           {/* Client Globe */}
-          <div className="relative h-[320px] w-full mt-2">
+          <div className="relative h-[210px] w-[210px] mx-auto -translate-y-10 z-0">
             <React.Suspense fallback={null}>
               <ClientGlobe />
             </React.Suspense>
