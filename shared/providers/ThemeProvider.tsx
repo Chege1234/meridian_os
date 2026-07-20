@@ -3,38 +3,18 @@
 /**
  * Shared Provider — Theme
  *
- * Applies the correct theme class to <html> based on Zustand store.
- * Handles system preference via matchMedia.
+ * Meridian OS is dark-only. This provider applies the 'dark' class to <html>
+ * permanently. The Zustand store's mode is preserved for API compatibility
+ * but no longer drives light/dark switching.
  */
 
 import { useEffect } from 'react';
-import { useThemeStore } from '@/shared/stores';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const mode = useThemeStore((s) => s.mode);
-
   useEffect(() => {
-    const root = document.documentElement;
-
-    function applyTheme(isDark: boolean) {
-      if (isDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    }
-
-    if (mode === 'system') {
-      const mql = window.matchMedia('(prefers-color-scheme: dark)');
-      applyTheme(mql.matches);
-
-      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
-      mql.addEventListener('change', handler);
-      return () => mql.removeEventListener('change', handler);
-    }
-
-    applyTheme(mode === 'dark');
-  }, [mode]);
+    // Always apply dark — Meridian OS is dark-only
+    document.documentElement.classList.add('dark');
+  }, []);
 
   return <>{children}</>;
 }

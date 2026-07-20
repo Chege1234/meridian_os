@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 /**
- * Feature Component — Content List Page
+ * Feature Component â€” Content List Page
  *
  * Searchable, filterable list of Content items.
  * Supports toggle between Kanban Board view and Table List view.
@@ -143,112 +143,78 @@ export function ContentListPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Title + Actions */}
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-up space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2">
-            <PenTool className="h-6 w-6 text-primary" /> Content Studio
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Plan, compose, review, and schedule campaign assets and social copies.
-          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">Meridian OS</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">Content Studio</h1>
+          <p className="mt-1 text-sm text-mer-muted">Plan, compose, review and schedule campaign assets.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-md border border-border/80 bg-muted/40 p-0.5">
-            <Button
-              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-              size="sm"
-              className="h-7 px-2.5 text-xs font-semibold gap-1"
-              onClick={() => setViewMode('kanban')}
-            >
-              <Kanban className="h-3.5 w-3.5" /> Board
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-              size="sm"
-              className="h-7 px-2.5 text-xs font-semibold gap-1"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-3.5 w-3.5" /> Table
-            </Button>
+          {/* View toggle */}
+          <div className="flex items-center gap-1 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] p-1">
+            {([['kanban', Kanban, 'Board'],['list', List, 'Table']] as const).map(([vm, Icon, label]) => (
+              <button
+                key={vm}
+                onClick={() => setViewMode(vm)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === vm
+                    ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)]'
+                    : 'text-mer-muted hover:text-mer-text'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />{label}
+              </button>
+            ))}
           </div>
 
+          {/* Create dialog */}
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <Button onClick={() => setIsCreateOpen(true)} className="gap-1.5 shadow-sm">
+            <Button onClick={() => setIsCreateOpen(true)} variant="glow" className="gap-1.5">
               <Plus className="h-4 w-4" /> Create Copy
             </Button>
-            <DialogContent className="sm:max-w-[550px] border-border bg-card">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <PenTool className="h-5 w-5 text-primary" /> Draft New Content
+                  <PenTool className="h-4 w-4 text-mer-cyan" /> Draft New Content
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                      Platform
-                    </label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring capitalize"
-                      value={newPlatform}
-                      onChange={(e: any) => setNewPlatform(e.target.value)}
-                    >
-                      {PLATFORMS.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
+                  {[{ label:'Platform', value:newPlatform, set:setNewPlatform, opts:PLATFORMS.map((p)=>[p,p]) },
+                    { label:'Type', value:newType, set:setNewType, opts:TYPES.map((t)=>[t,t.replace('_',' ')]) }]
+                    .map(({label, value, set, opts}) => (
+                    <div key={label} className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">{label}</label>
+                      <select
+                        className="w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 py-2 text-sm text-mer-text capitalize outline-none focus:border-[var(--mer-border-hover)]"
+                        value={value}
+                        onChange={(e:any) => set(e.target.value)}
+                      >
+                        {opts.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                {[{ label:'Caption / Summary', ph:'Short post caption, subject, or copy summaryâ€¦', rows:3, val:newCaption, set:setNewCaption },
+                  { label:'Body Copy (Long Form)', ph:'Write your email body, blog copy, or article text hereâ€¦', rows:6, val:newBody, set:setNewBody }]
+                  .map(({label, ph, rows, val, set}) => (
+                  <div key={label} className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">{label}</label>
+                    <textarea
+                      rows={rows}
+                      className="w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 py-2 text-sm text-mer-text placeholder:text-mer-muted outline-none focus:border-[var(--mer-border-hover)] resize-none"
+                      placeholder={ph}
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                    />
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                      Content Type
-                    </label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring capitalize"
-                      value={newType}
-                      onChange={(e: any) => setNewType(e.target.value)}
-                    >
-                      {TYPES.map((t) => (
-                        <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    Caption / Summary Text
-                  </label>
-                  <textarea
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    placeholder="Short post caption, subject, or copy summary..."
-                    value={newCaption}
-                    onChange={(e) => setNewCaption(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    Body Copy (Long Form)
-                  </label>
-                  <textarea
-                    className="flex min-h-[160px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    placeholder="Write your email body, blog copy, or article text here..."
-                    value={newBody}
-                    onChange={(e) => setNewBody(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={creating}>
-                    {creating ? 'Creating...' : 'Create Draft'}
-                  </Button>
+                ))}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={creating}>{creating ? 'Creatingâ€¦' : 'Create Draft'}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -256,103 +222,81 @@ export function ContentListPage() {
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border border-border/80">
+      {/* Search & filter bar */}
+      <div className="flex flex-col gap-3 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mer-muted" />
           <Input
-            placeholder="Search captions or bodies..."
+            placeholder="Search captions or body copyâ€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
           />
         </div>
         <div className="flex items-center gap-2">
-          {/* Platform Filter */}
-          <select
-            className="flex h-9 rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring capitalize"
-            value={platformFilter}
-            onChange={(e) => setPlatformFilter(e.target.value)}
-          >
-            <option value="all">All Platforms</option>
-            {PLATFORMS.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-
-          {/* List Status Filter (only shown in table view, board shows all) */}
-          {viewMode === 'list' && (
-            <select
-              className="flex h-9 rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring capitalize"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Statuses</option>
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+          {[{ val: platformFilter, set: setPlatformFilter, opts: [['all','All Platforms'], ...PLATFORMS.map((p)=>[p,p])] },
+            ...(viewMode==='list' ? [{ val: statusFilter, set: setStatusFilter, opts: [['all','All Statuses'], ...STATUSES.map((s)=>[s,s])] }] : [])]
+            .map((sel,i) => (
+            <select key={i} value={sel.val} onChange={(e) => sel.set(e.target.value)}
+              className="h-9 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 text-xs text-mer-text outline-none capitalize focus:border-[var(--mer-border-hover)]">
+              {sel.opts.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-          )}
+          ))}
         </div>
       </div>
 
-      {/* Board View */}
+      {/* Kanban / List view */}
       {viewMode === 'kanban' ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-2 gap-3 overflow-x-auto pb-4 md:grid-cols-3 xl:grid-cols-6">
           {STATUSES.map((status) => {
             const statusItems = getItemsByStatus(status);
-            const badgeVariants: Record<string, string> = {
-              draft: 'bg-muted text-muted-foreground',
-              review: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
-              approved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-              scheduled: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-              published: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-              archived: 'bg-red-500/10 text-red-600 dark:text-red-400',
+            const COLUMN_COLOR: Record<string, string> = {
+              draft:     'text-mer-muted',
+              review:    'text-mer-amber',
+              approved:  'text-mer-green',
+              scheduled: 'text-mer-blue',
+              published: 'text-mer-cyan',
+              archived:  'text-mer-red',
             };
-
             return (
-              <div key={status} className="flex flex-col min-w-[220px] bg-muted/20 border border-border/60 rounded-lg p-3 space-y-3 min-h-[500px]">
-                <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                  <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <div
+                key={status}
+                className="flex min-h-[480px] min-w-[200px] flex-col rounded-[16px] border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.5)] backdrop-blur-sm p-3"
+              >
+                {/* Column header */}
+                <div className="mb-3 flex items-center justify-between border-b border-[var(--mer-border-glow)] pb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${COLUMN_COLOR[status]}`}>
                     {status.replace('_', ' ')}
                   </span>
-                  <Badge variant="outline" className={`font-mono text-[10px] ${badgeVariants[status]}`}>
+                  <span className={`font-mono text-[10px] font-semibold ${COLUMN_COLOR[status]}`}>
                     {statusItems.length}
-                  </Badge>
+                  </span>
                 </div>
 
-                <div className="space-y-3 flex-1 overflow-y-auto">
+                {/* Cards */}
+                <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
                   {statusItems.map((item) => (
-                    <Card
+                    <div
                       key={item.id}
-                      className="p-3 border-border bg-card hover:border-primary/50 transition-colors shadow-sm cursor-pointer space-y-2 relative group"
                       onClick={() => setSelectedItemId(item.id)}
+                      className="group cursor-pointer rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(13,20,35,0.7)] p-3 space-y-2 transition-all hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_10px_var(--mer-glow-cyan)]"
                     >
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold capitalize px-1 py-0 border-border">
-                          {item.platform}
-                        </Badge>
-                        <span className="text-[9px] text-muted-foreground font-mono">
-                          {item.type.replace('_', ' ')}
-                        </span>
+                        <Badge variant="muted" className="text-[9px] capitalize">{item.platform}</Badge>
+                        <span className="font-mono text-[9px] text-mer-muted">{item.type.replace('_',' ')}</span>
                       </div>
-                      
-                      <p className="text-xs text-foreground/80 line-clamp-3 font-medium">
-                        {item.caption || item.body || <span className="text-muted-foreground/40 italic">Empty Copy</span>}
+                      <p className="text-xs text-mer-text line-clamp-3 leading-relaxed">
+                        {item.caption || item.body || <span className="italic text-mer-muted/50">Empty Copy</span>}
                       </p>
-
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1.5 border-t border-border/40">
-                        <span className="flex items-center gap-0.5">
-                          <Clock className="h-2.5 w-2.5" />
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
+                      <div className="flex items-center gap-0.5 pt-1 border-t border-[var(--mer-border-glow)] text-[10px] text-mer-muted">
+                        <Clock className="h-2.5 w-2.5" />
+                        {new Date(item.createdAt).toLocaleDateString()}
                       </div>
-                    </Card>
+                    </div>
                   ))}
-                  
                   {statusItems.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border/40 rounded-lg">
-                      <span className="text-[10px] text-muted-foreground/50 font-medium">Empty Column</span>
+                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-[var(--mer-border-glow)] py-10">
+                      <span className="text-[10px] text-mer-muted/50">Empty</span>
                     </div>
                   )}
                 </div>
@@ -361,50 +305,40 @@ export function ContentListPage() {
           })}
         </div>
       ) : (
-        /* List Table View */
-        <div className="rounded-lg border border-border/80 bg-card overflow-hidden">
+        /* List table view */
+        <>
           {loading ? (
-            <div className="space-y-3 p-6">
-              <div className="h-6 w-full animate-pulse rounded bg-muted" />
-              <div className="h-20 w-full animate-pulse rounded bg-muted" />
+            <div className="space-y-3 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] p-6">
+              {[1,2,3].map((i) => (
+                <div key={i} className="h-10 w-full animate-pulse rounded-xl bg-white/[0.04]" />
+              ))}
             </div>
           ) : items.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Platform</TableHead>
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Type</TableHead>
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Preview</TableHead>
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Status</TableHead>
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Created On</TableHead>
-                  <TableHead className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">Actions</TableHead>
+                  {['Platform','Type','Preview','Status','Created On','Actions'].map((h) => (
+                    <TableHead key={h}>{h}</TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/30">
-                    <TableCell className="px-4 py-3 capitalize">
-                      <Badge variant="outline" className="font-semibold text-xs">{item.platform}</Badge>
+                  <TableRow key={item.id}>
+                    <TableCell><Badge variant="muted" className="capitalize text-xs">{item.platform}</Badge></TableCell>
+                    <TableCell className="font-mono text-xs text-mer-muted capitalize">{item.type.replace('_',' ')}</TableCell>
+                    <TableCell className="max-w-xs truncate text-xs">{item.caption || item.body || <span className="italic text-mer-muted/50">Empty</span>}</TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        item.status==='published' ? 'cyan' :
+                        item.status==='approved'  ? 'green' :
+                        item.status==='review'    ? 'amber' :
+                        item.status==='archived'  ? 'red' : 'muted'
+                      } className="capitalize">{item.status}</Badge>
                     </TableCell>
-                    <TableCell className="px-4 py-3 capitalize text-xs font-mono">{item.type.replace('_', ' ')}</TableCell>
-                    <TableCell className="px-4 py-3 text-xs max-w-sm truncate">
-                      {item.caption || item.body || <span className="text-muted-foreground/40 italic">Empty Copy</span>}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant={item.status === 'published' ? 'default' : 'secondary'} className="capitalize">
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-xs text-muted-foreground">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1 text-xs"
-                        onClick={() => setSelectedItemId(item.id)}
-                      >
+                    <TableCell className="text-xs text-mer-muted">{new Date(item.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs" onClick={() => setSelectedItemId(item.id)}>
                         <Eye className="h-3.5 w-3.5" /> Details
                       </Button>
                     </TableCell>
@@ -413,16 +347,15 @@ export function ContentListPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <FileText className="h-8 w-8 text-muted-foreground/60" />
-              <h3 className="mt-4 text-sm font-semibold text-foreground">No copies found</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                No matching content copies were found. Try adjusting your search query.
-              </p>
+            <div className="flex flex-col items-center justify-center rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] py-16 text-center">
+              <FileText className="h-8 w-8 text-mer-muted/60" />
+              <h3 className="mt-4 text-sm font-semibold text-mer-text">No copies found</h3>
+              <p className="mt-1 text-xs text-mer-muted">Try adjusting your search or filters.</p>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 /**
- * Feature Component — Campaigns Page
+ * Feature Component â€” Campaigns Page
  *
  * Searchable, filterable list of campaigns using TanStack Table + card grid view.
  */
@@ -206,206 +206,181 @@ export function CampaignsPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+    <div className="animate-fade-up space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Campaign Center</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Plan, monitor, and coordinate your multi-channel marketing campaigns.
-          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">Meridian OS</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">Campaign Centre</h1>
+          <p className="mt-1 text-sm text-mer-muted">Plan, monitor and coordinate your multi-channel campaigns.</p>
         </div>
         <NewCampaignDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ['campaigns'] })} />
       </div>
 
-      {/* Filters & Actions Panel */}
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-card p-3 rounded-lg border border-border/60 shadow-sm">
-        <div className="flex flex-wrap gap-2.5 items-center flex-1 max-w-2xl">
+      {/* Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-4">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Search */}
-          <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/60" />
+          <div className="relative w-56">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mer-muted" />
             <Input
               type="text"
-              placeholder="Search campaigns..."
+              placeholder="Search campaignsâ€¦"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-9 text-xs"
+              className="pl-9 bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
             />
           </div>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="all">All Statuses</option>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
-          </select>
-
-          {/* Channel Filter */}
-          <select
-            value={channelFilter}
-            onChange={(e) => setChannelFilter(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="all">All Channels</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="email">Email</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="twitter">Twitter/X</option>
-            <option value="linkedin">LinkedIn</option>
-            <option value="blog">Blog</option>
-          </select>
-
-          {/* Owner Filter */}
-          <select
-            value={ownerFilter}
-            onChange={(e) => setOwnerFilter(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="all">All Owners</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.fullName}
-              </option>
-            ))}
-          </select>
+          {[{
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [['all','All Statuses'],['draft','Draft'],['active','Active'],['paused','Paused'],['completed','Completed'],['archived','Archived']],
+          },{
+            value: channelFilter,
+            onChange: setChannelFilter,
+            options: [['all','All Channels'],['instagram','Instagram'],['tiktok','TikTok'],['email','Email'],['whatsapp','WhatsApp'],['twitter','Twitter/X'],['linkedin','LinkedIn'],['blog','Blog']],
+          },{
+            value: ownerFilter,
+            onChange: setOwnerFilter,
+            options: [['all','All Owners'], ...users.map((u) => [u.id, u.fullName])],
+          }].map((sel, i) => (
+            <select
+              key={i}
+              value={sel.value}
+              onChange={(e) => sel.onChange(e.target.value)}
+              className="h-9 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 text-xs text-mer-text outline-none focus:border-[var(--mer-border-hover)]"
+            >
+              {sel.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          ))}
         </div>
 
-        {/* View Toggle */}
-        <div className="flex border border-border/80 rounded-md p-0.5 bg-muted/40">
-          <Button
-            size="sm"
-            variant={viewType === 'grid' ? 'default' : 'ghost'}
-            className="h-8 px-2.5 py-1.5 cursor-pointer text-xs"
-            onClick={() => setViewType('grid')}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={viewType === 'table' ? 'default' : 'ghost'}
-            className="h-8 px-2.5 py-1.5 cursor-pointer text-xs"
-            onClick={() => setViewType('table')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
+        {/* View toggle */}
+        <div className="flex items-center gap-1 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] p-1">
+          {([['grid', Grid],['table', List]] as const).map(([vt, Icon]) => (
+            <button
+              key={vt}
+              onClick={() => setViewType(vt)}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all cursor-pointer ${
+                viewType === vt
+                  ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)]'
+                  : 'text-mer-muted hover:text-mer-text'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Main List Area */}
+      {/* Main list area */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse h-52 bg-muted/50 border-none" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[1,2,3].map((i) => (
+            <div key={i} className="h-52 animate-pulse rounded-[16px] border border-[var(--mer-border-glow)] bg-white/[0.02]" />
           ))}
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="text-center py-16 bg-card border border-dashed rounded-lg">
-          <Calendar className="h-8 w-8 text-muted-foreground/40 mx-auto" />
-          <h3 className="mt-3 text-sm font-semibold text-foreground">No campaigns found</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Try refining your filter criteria.</p>
+        <div className="flex flex-col items-center justify-center rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] py-16 text-center backdrop-blur-md">
+          <Calendar className="h-8 w-8 text-mer-muted/60" />
+          <h3 className="mt-3 text-sm font-semibold text-mer-text">No campaigns found</h3>
+          <p className="text-xs text-mer-muted mt-0.5">Try refining your filter criteria.</p>
         </div>
       ) : viewType === 'grid' ? (
-        /* Card Grid View */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {campaigns.map((camp) => (
-            <Card key={camp.id} className="border border-border/80 hover:border-primary/40 shadow-sm bg-card hover:shadow transition-all relative overflow-hidden flex flex-col justify-between">
-              <div>
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <CardTitle className="text-base font-bold tracking-tight text-foreground line-clamp-1">
-                      {camp.name}
-                    </CardTitle>
-                    <Badge variant={getStatusBadgeVariant(camp.status)} className="capitalize text-[10px] px-2 py-0">
-                      {camp.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
-                    {camp.objective}
-                  </p>
-                </CardHeader>
+            <div
+              key={camp.id}
+              className="group relative flex flex-col overflow-hidden rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md transition-all duration-200 hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_20px_var(--mer-glow-cyan)]"
+            >
+              <div className="flex flex-1 flex-col p-5">
+                {/* Header */}
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <h3 className="text-sm font-semibold leading-snug text-mer-text line-clamp-1">{camp.name}</h3>
+                  <Badge
+                    variant={
+                      camp.status === 'active' ? 'green' :
+                      camp.status === 'completed' ? 'cyan' :
+                      camp.status === 'paused' ? 'amber' :
+                      camp.status === 'archived' ? 'red' : 'muted'
+                    }
+                    className="capitalize text-[10px] shrink-0"
+                  >
+                    {camp.status}
+                  </Badge>
+                </div>
+                <p className="mb-3 text-xs text-mer-muted line-clamp-2 leading-relaxed">{camp.objective}</p>
 
-                <CardContent className="p-4 pt-2 pb-2 space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    {camp.channel.map((ch) => (
-                      <Badge key={ch} variant="outline" className="text-[10px] capitalize px-1.5 py-0 border-border/80 bg-muted/30">
-                        {ch}
-                      </Badge>
-                    ))}
-                  </div>
+                {/* Channel badges */}
+                <div className="flex flex-wrap gap-1">
+                  {camp.channel.map((ch) => (
+                    <Badge key={ch} variant="muted" className="text-[9px] capitalize">{ch}</Badge>
+                  ))}
+                </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <DollarSign className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="text-foreground font-medium truncate">{formatBudget(camp.budget)}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <UserIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="text-foreground truncate">{getOwnerName(camp.ownerId)}</span>
-                    </div>
+                {/* Meta */}
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[var(--mer-border-glow)] pt-3 text-xs">
+                  <div className="flex items-center gap-1.5 text-mer-muted">
+                    <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-mer-text font-medium truncate">{formatBudget(camp.budget)}</span>
                   </div>
-                </CardContent>
+                  <div className="flex items-center gap-1.5 text-mer-muted">
+                    <UserIcon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-mer-text truncate">{getOwnerName(camp.ownerId)}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-4 pt-2 border-t border-border/30 bg-muted/5 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Start: {formatDate(camp.startDate)}</span>
+              {/* Footer */}
+              <div className="flex items-center justify-between border-t border-[var(--mer-border-glow)] px-4 py-2.5">
+                <span className="text-[11px] text-mer-muted">{formatDate(camp.startDate)}</span>
                 <div className="flex items-center gap-1">
                   <Link href={`/campaigns/${camp.id}`} passHref>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]">
-                      View Details
+                    <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-[11px] text-mer-muted hover:text-mer-cyan">
+                      <Eye className="h-3 w-3" /> View
                     </Button>
                   </Link>
                   <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50/10 dark:hover:bg-red-950/10"
+                    size="sm" variant="ghost"
+                    className="h-7 w-7 p-0 text-mer-muted hover:text-mer-red"
                     onClick={() => handleArchive(camp.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       ) : (
-        /* Table View */
-        <div className="rounded-lg border border-border/80 bg-card overflow-hidden">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground p-3">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/10 border-b border-border/40">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent">
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id}>
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );
 }
+
+      {/* Page Header */}

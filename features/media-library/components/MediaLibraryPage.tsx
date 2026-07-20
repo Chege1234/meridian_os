@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Feature Component — Media Library Page
+ * Feature Component â€” Media Library Page
  *
  * Grid/list view with folder navigation, drag-and-drop upload, search/filter.
  * Upload flow shows duplicate warning when checksum matches.
@@ -39,7 +39,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
 } from '@/shared/components/ui';
+import { GlassPanel } from '@/shared/components/ui/GlassPanel';
 import type { MediaAsset, MediaFolder } from '@/domain/entities';
 import {
   getMediaAssetsAction,
@@ -220,15 +227,18 @@ export function MediaLibraryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-up space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
+            Meridian OS
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">
             Media Library
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Upload, organize, and manage all your media assets.
+          <p className="mt-1 text-sm text-mer-muted">
+            Upload, organize, and manage all your media assets in a secure repository.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -236,13 +246,14 @@ export function MediaLibraryPage() {
             variant="outline"
             size="sm"
             onClick={() => setShowCreateFolder(true)}
-            className="gap-1.5"
+            className="gap-1.5 border-[var(--mer-border-glow)] hover:border-[var(--mer-border-hover)]"
           >
-            <FolderPlus className="h-4 w-4" />
+            <FolderPlus className="h-4 w-4 text-mer-cyan" />
             New Folder
           </Button>
           <Button
             size="sm"
+            variant="glow"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="gap-1.5"
@@ -261,98 +272,112 @@ export function MediaLibraryPage() {
         </div>
       </div>
 
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1 text-sm">
-        <button
-          onClick={() => navigateToFolder(null)}
-          className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          <Home className="h-3.5 w-3.5" />
-          Root
-        </button>
-        {breadcrumbs.map((bc) => (
-          <span key={bc.id} className="flex items-center gap-1">
-            <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
-            <button
-              onClick={() => navigateToFolder(bc.id)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {bc.name}
-            </button>
-          </span>
-        ))}
-      </nav>
+      {/* Navigation & Controls Row */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-4">
+        {/* Breadcrumbs */}
+        <nav className="flex flex-wrap items-center gap-1.5 text-xs">
+          <button
+            onClick={() => navigateToFolder(null)}
+            className="text-mer-muted hover:text-mer-cyan transition-colors flex items-center gap-1 font-medium cursor-pointer"
+          >
+            <Home className="h-3.5 w-3.5" />
+            Root
+          </button>
+          {breadcrumbs.map((bc) => (
+            <span key={bc.id} className="flex items-center gap-1.5">
+              <ChevronRight className="h-3 w-3 text-mer-muted/40" />
+              <button
+                onClick={() => navigateToFolder(bc.id)}
+                className="text-mer-muted hover:text-mer-cyan transition-colors font-medium cursor-pointer"
+              >
+                {bc.name}
+              </button>
+            </span>
+          ))}
+        </nav>
 
-      {/* Search + View Toggle */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            id="media-search"
-            placeholder="Search by filename, alt text, or tags..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex items-center border border-border rounded-md">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            aria-label="Grid view"
-          >
-            <Grid3X3 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            aria-label="List view"
-          >
-            <List className="h-4 w-4" />
-          </button>
+        {/* Search + View Toggle */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mer-muted" />
+            <Input
+              id="media-search"
+              placeholder="Search by filename, alt, tag..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)] text-xs h-9"
+            />
+          </div>
+          <div className="flex items-center gap-1 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] p-1 shrink-0">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)]'
+                  : 'text-mer-muted hover:text-mer-text'
+              }`}
+              aria-label="Grid view"
+            >
+              <Grid3X3 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)]'
+                  : 'text-mer-muted hover:text-mer-text'
+              }`}
+              aria-label="List view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Drag & Drop Zone + Content */}
       <div
         className={`
-          min-h-[400px] rounded-xl border-2 border-dashed transition-all
-          ${dragOver ? 'border-primary bg-primary/5' : 'border-border/40 bg-transparent'}
+          min-h-[420px] rounded-[16px] border border-dashed transition-all duration-200
+          ${dragOver ? 'border-mer-cyan bg-[rgba(77,216,255,0.04)] shadow-[0_0_24px_var(--mer-glow-cyan)]' : 'border-[var(--mer-border-glow)] bg-[var(--mer-surface)]/30'}
         `}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
         {dragOver && (
-          <div className="flex flex-col items-center justify-center h-[400px] text-primary">
-            <Upload className="h-12 w-12 mb-2 animate-bounce" />
-            <p className="text-sm font-medium">Drop files to upload</p>
+          <div className="flex flex-col items-center justify-center h-[420px] text-mer-cyan">
+            <Upload className="h-12 w-12 mb-3 animate-bounce" />
+            <p className="text-sm font-semibold tracking-wide">Drop files to upload</p>
           </div>
         )}
 
         {!dragOver && loading && (
-          <div className="flex items-center justify-center h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+          <div className="flex items-center justify-center h-[420px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-mer-cyan border-t-transparent shadow-[0_0_12px_rgba(77,216,255,0.3)]" />
           </div>
         )}
 
         {!dragOver && !loading && (
-          <div className="p-4">
-            {/* Folders */}
+          <div className="p-5">
+            {/* Folders Section */}
             {folders.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <p className="text-[10px] font-semibold text-mer-muted uppercase tracking-widest mb-3">
                   Folders
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                   {folders.map((folder) => (
                     <button
                       key={folder.id}
                       onClick={() => navigateToFolder(folder.id)}
-                      className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border/60 hover:border-primary/40 hover:bg-accent/30 transition-all group"
+                      className="flex flex-col items-center gap-2.5 p-4 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(13,20,35,0.6)] hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_12px_var(--mer-glow-cyan)] hover:bg-[rgba(13,20,35,0.85)] transition-all group text-center cursor-pointer"
                     >
-                      <Folder className="h-8 w-8 text-primary/60 group-hover:text-primary transition-colors" />
-                      <span className="text-xs font-medium text-foreground truncate max-w-full">
+                      <Folder className="h-7 w-7 text-mer-cyan/70 group-hover:text-mer-cyan transition-colors" />
+                      <span className="text-xs font-semibold text-mer-text truncate max-w-full">
                         {folder.name}
                       </span>
                     </button>
@@ -361,106 +386,137 @@ export function MediaLibraryPage() {
               </div>
             )}
 
-            {/* Assets */}
+            {/* Assets Section */}
             {assets.length === 0 && folders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-                <Image className="h-16 w-16 mb-3 opacity-20" />
-                <p className="text-sm font-medium">No media assets yet</p>
-                <p className="text-xs mt-1">Drag and drop files here or click Upload</p>
+              <div className="flex flex-col items-center justify-center h-[320px] text-mer-muted">
+                <Image className="h-16 w-16 mb-4 opacity-20 text-mer-cyan" />
+                <p className="text-sm font-semibold text-mer-text">No media assets in this folder</p>
+                <p className="text-xs mt-1">Drag and drop files here or click Upload to get started.</p>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-                {assets.map((asset) => {
-                  const IconComponent = getFileIcon(asset.mimeType);
-                  const isImage = asset.mimeType.startsWith('image/');
-                  return (
-                    <Card
-                      key={asset.id}
-                      className="group relative overflow-hidden border-border/60 hover:border-primary/40 transition-all cursor-default"
-                    >
-                      {/* Thumbnail / Icon */}
-                      <div className="h-24 bg-muted/20 flex items-center justify-center overflow-hidden">
-                        {isImage ? (
-                          <img
-                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
-                            alt={asset.altText || asset.filename}
-                            className="max-h-full max-w-full object-contain p-1.5"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <IconComponent className="h-8 w-8 text-muted-foreground/30" />
-                        )}
+              <div className="space-y-3">
+                {assets.length > 0 && (
+                  <p className="text-[10px] font-semibold text-mer-muted uppercase tracking-widest">
+                    Media Items ({assets.length})
+                  </p>
+                )}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                  {assets.map((asset) => {
+                    const IconComponent = getFileIcon(asset.mimeType);
+                    const isImage = asset.mimeType.startsWith('image/');
+                    return (
+                      <div
+                        key={asset.id}
+                        className="group relative flex flex-col overflow-hidden rounded-[16px] border border-[var(--mer-border-glow)] bg-[rgba(13,20,35,0.65)] hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_16px_var(--mer-glow-cyan)] transition-all duration-200"
+                      >
+                        {/* Thumbnail or Icon */}
+                        <div className="h-28 bg-[rgba(7,12,22,0.4)] flex items-center justify-center overflow-hidden border-b border-[var(--mer-border-glow)]">
+                          {isImage ? (
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-assets/${asset.storagePath}`}
+                              alt={asset.altText || asset.filename}
+                              className="max-h-full max-w-full object-contain p-2"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <IconComponent className="h-8 w-8 text-mer-cyan/40" />
+                          )}
+                        </div>
+                        {/* File details */}
+                        <div className="p-3">
+                          <p className="text-xs font-semibold text-mer-text truncate" title={asset.filename}>
+                            {asset.filename}
+                          </p>
+                          <p className="text-[10px] text-mer-muted mt-0.5 font-mono">
+                            {formatFileSize(asset.size)} Â· {asset.mimeType.split('/')[1]?.toUpperCase()}
+                          </p>
+                          {asset.tags.length > 0 && (
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                              {asset.tags.slice(0, 2).map((tag) => (
+                                <Badge key={tag} variant="muted" className="text-[9px] px-1.5 py-0">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* Actions (hover) */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleArchive(asset.id)}
+                            className="bg-[rgba(7,12,22,0.85)] border border-[var(--mer-border-glow)] p-1.5 rounded-lg text-mer-muted hover:text-mer-red hover:border-mer-red/50 transition-colors cursor-pointer"
+                            title="Archive"
+                          >
+                            <Archive className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      {/* Info */}
-                      <div className="p-2.5">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {asset.filename}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {formatFileSize(asset.size)} · {asset.mimeType.split('/')[1]?.toUpperCase()}
-                        </p>
-                        {asset.tags.length > 0 && (
-                          <div className="flex gap-1 mt-1.5 flex-wrap">
-                            {asset.tags.slice(0, 2).map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {/* Actions (on hover) */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleArchive(asset.id)}
-                          className="bg-background/80 backdrop-blur-sm border border-border/60 p-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title="Archive"
-                        >
-                          <Archive className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </Card>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              /* List View */
-              <div className="space-y-1">
-                {assets.map((asset) => {
-                  const IconComponent = getFileIcon(asset.mimeType);
-                  return (
-                    <div
-                      key={asset.id}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent/30 border border-transparent hover:border-border/40 transition-all group"
-                    >
-                      <IconComponent className="h-5 w-5 text-muted-foreground/60 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {asset.filename}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(asset.size)} · {asset.mimeType} · {new Date(asset.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {asset.tags.length > 0 && (
-                        <div className="flex gap-1 flex-shrink-0">
-                          {asset.tags.slice(0, 3).map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-[9px]">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      <button
-                        onClick={() => handleArchive(asset.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0"
-                        title="Archive"
-                      >
-                        <Archive className="h-4 w-4" />
-                      </button>
-                    </div>
-                  );
-                })}
+              /* List View Table */
+              <div className="space-y-3">
+                {assets.length > 0 && (
+                  <p className="text-[10px] font-semibold text-mer-muted uppercase tracking-widest">
+                    Media Items ({assets.length})
+                  </p>
+                )}
+                <div className="overflow-x-auto rounded-[16px] border border-[var(--mer-border-glow)]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>Filename</TableHead>
+                        <TableHead>Mime Type</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Tags</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {assets.map((asset) => {
+                        const IconComponent = getFileIcon(asset.mimeType);
+                        return (
+                          <TableRow key={asset.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2.5 max-w-sm">
+                                <IconComponent className="h-4 w-4 text-mer-cyan/60 shrink-0" />
+                                <span className="font-semibold text-mer-text truncate" title={asset.filename}>
+                                  {asset.filename}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-mer-muted uppercase">
+                              {asset.mimeType}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-mer-text">
+                              {formatFileSize(asset.size)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">
+                                {asset.tags.slice(0, 3).map((tag) => (
+                                  <Badge key={tag} variant="muted" className="text-[9px]">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <button
+                                onClick={() => handleArchive(asset.id)}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/5 text-mer-muted hover:text-mer-red transition-all cursor-pointer"
+                                title="Archive"
+                              >
+                                <Archive className="h-4 w-4" />
+                              </button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </div>
@@ -469,10 +525,10 @@ export function MediaLibraryPage() {
 
       {/* Create Folder Dialog */}
       <Dialog open={showCreateFolder} onOpenChange={setShowCreateFolder}>
-        <DialogContent className="sm:max-w-[400px] border-border bg-card">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-primary" />
+              <FolderPlus className="h-4 w-4 text-mer-cyan" />
               New Folder
             </DialogTitle>
           </DialogHeader>
@@ -483,13 +539,14 @@ export function MediaLibraryPage() {
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+              className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
               autoFocus
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowCreateFolder(false)}>
+              <Button variant="outline" onClick={() => setShowCreateFolder(false)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+              <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
                 Create
               </Button>
             </div>
@@ -500,30 +557,29 @@ export function MediaLibraryPage() {
       {/* Duplicate Warning Dialog */}
       {duplicateWarning && (
         <Dialog open={!!duplicateWarning} onOpenChange={() => setDuplicateWarning(null)}>
-          <DialogContent className="sm:max-w-[450px] border-border bg-card">
+          <DialogContent className="sm:max-w-[450px]">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-amber-500">
-                <AlertTriangle className="h-5 w-5" />
+              <DialogTitle className="flex items-center gap-2 text-mer-amber">
+                <AlertTriangle className="h-4 w-4" />
                 Duplicate File Detected
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
-              <p className="text-sm text-muted-foreground">
-                A file with the same checksum already exists in your library:
+              <p className="text-sm text-mer-muted leading-relaxed">
+                A file with the identical content hash is already registered in your library:
               </p>
-              <Card className="p-3 border-amber-500/20 bg-amber-500/5">
-                <p className="text-sm font-medium text-foreground">
+              <GlassPanel className="p-4 border-mer-amber/30 bg-mer-amber/5">
+                <p className="text-sm font-semibold text-mer-text truncate">
                   {duplicateWarning.existingAsset.filename}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {formatFileSize(duplicateWarning.existingAsset.size)} ·{' '}
+                <p className="text-xs text-mer-muted mt-0.5 font-mono">
+                  {formatFileSize(duplicateWarning.existingAsset.size)} Â·{' '}
                   Uploaded {new Date(duplicateWarning.existingAsset.createdAt).toLocaleDateString()}
                 </p>
-              </Card>
+              </GlassPanel>
               <div className="flex justify-end gap-2 pt-2">
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => setDuplicateWarning(null)}
                 >
                   <X className="h-3.5 w-3.5 mr-1" />
@@ -531,16 +587,16 @@ export function MediaLibraryPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
-                    toast.success('Using existing asset.');
+                    toast.success('Using existing asset reference.');
                     setDuplicateWarning(null);
                   }}
+                  className="border-[var(--mer-border-glow)] text-mer-text"
                 >
                   Use Existing
                 </Button>
                 <Button
-                  size="sm"
+                  variant="glow"
                   onClick={() => {
                     handleUpload(duplicateWarning.file, true);
                   }}

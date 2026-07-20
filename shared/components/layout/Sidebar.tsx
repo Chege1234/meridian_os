@@ -3,9 +3,9 @@
 /**
  * Shared Layout — Sidebar
  *
- * Config-driven collapsible sidebar navigation.
- * Per docs/07: 280px expanded, collapsible, remembers preference.
- * Style: Linear/Vercel — minimal, fast, premium.
+ * Meridian OS glass-panel sidebar. Config-driven collapsible navigation.
+ * Active item: glowing cyan left accent bar + tinted background.
+ * All data wiring (useSidebarStore, NAVIGATION_ITEMS) is unchanged.
  */
 
 import Link from 'next/link';
@@ -27,23 +27,46 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-background))] transition-[width] duration-200',
-        collapsed ? 'w-[72px]' : 'w-[280px]',
+        'relative flex h-screen flex-col',
+        'border-r border-[var(--mer-border-glow)]',
+        'bg-[rgba(7,12,22,0.85)] backdrop-blur-xl',
+        'transition-[width] duration-200 ease-in-out',
+        'z-10',
+        collapsed ? 'w-[72px]' : 'w-[260px]',
       )}
     >
-      {/* Logo */}
-      <div className="flex h-14 items-center justify-between px-4">
+      {/* Logo / brand header */}
+      <div
+        className={cn(
+          'flex h-14 items-center border-b border-[var(--mer-border-glow)]',
+          collapsed ? 'justify-center px-0' : 'justify-between px-4',
+        )}
+      >
         {!collapsed && (
           <Link
             href="/dashboard"
-            className="text-sm font-semibold tracking-tight text-[hsl(var(--sidebar-foreground))]"
+            className="flex items-center gap-2.5 select-none"
           >
-            Meridian OS
+            {/* M badge */}
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(77,216,255,0.15)] shadow-[0_0_12px_rgba(77,216,255,0.3)] border border-[rgba(77,216,255,0.3)]">
+              <span className="text-[11px] font-bold text-mer-cyan">M</span>
+            </div>
+            <span className="text-[13px] font-semibold tracking-tight text-mer-text">
+              Meridian OS
+            </span>
           </Link>
         )}
+
+        {/* Collapse toggle */}
         <button
           onClick={toggle}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+          className={cn(
+            'inline-flex h-8 w-8 items-center justify-center rounded-lg',
+            'text-mer-muted transition-colors duration-150',
+            'hover:bg-[rgba(77,216,255,0.08)] hover:text-mer-cyan',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mer-cyan',
+            collapsed && 'mx-auto',
+          )}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -55,7 +78,11 @@ export function Sidebar() {
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2" role="navigation" aria-label="Main">
+      <nav
+        className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3"
+        role="navigation"
+        aria-label="Main"
+      >
         {mainItems.map((item) => (
           <NavItem
             key={item.href}
@@ -66,8 +93,8 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Workspace Section */}
-      <div className="border-t border-[hsl(var(--sidebar-border))] px-3 py-2">
+      {/* Workspace (Settings) section */}
+      <div className="border-t border-[var(--mer-border-glow)] px-2 py-3 space-y-0.5">
         {workspaceItems.map((item) => (
           <NavItem
             key={item.href}
@@ -97,7 +124,8 @@ function NavItem({
     return (
       <span
         className={cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium opacity-40 cursor-not-allowed',
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
+          'opacity-30 cursor-not-allowed text-mer-muted',
           collapsed && 'justify-center px-0',
         )}
         title={collapsed ? item.label : undefined}
@@ -111,21 +139,33 @@ function NavItem({
   return (
     <Link
       href={item.href}
-      onMouseEnter={() => {
-        router.prefetch(item.href);
-      }}
+      onMouseEnter={() => router.prefetch(item.href)}
       className={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
+        'transition-all duration-150',
         isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+          ? [
+              'bg-[rgba(77,216,255,0.08)] text-mer-cyan',
+              // Glowing left accent bar
+              'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px]',
+              'before:rounded-full before:bg-mer-cyan',
+              'before:shadow-[0_0_6px_rgba(77,216,255,0.8)]',
+            ]
+          : 'text-mer-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-mer-text',
         collapsed && 'justify-center px-0',
       )}
       title={collapsed ? item.label : undefined}
       aria-current={isActive ? 'page' : undefined}
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      <Icon
+        className={cn(
+          'h-4 w-4 shrink-0 transition-colors',
+          isActive ? 'text-mer-cyan' : 'group-hover:text-mer-text',
+        )}
+      />
+      {!collapsed && (
+        <span className="truncate">{item.label}</span>
+      )}
     </Link>
   );
 }

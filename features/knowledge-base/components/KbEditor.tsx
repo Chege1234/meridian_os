@@ -39,6 +39,7 @@ import {
   TabsTrigger,
   TabsContent
 } from '@/shared/components/ui';
+import { GlassPanel } from '@/shared/components/ui/GlassPanel';
 import type { KbArticle, KbArticleVersion, KbCategory } from '@/domain/entities';
 import {
   getArticleDetailAction,
@@ -270,20 +271,20 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
   const isArchived = article?.status === 'archived';
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+    <div className="animate-fade-up space-y-6">
+      {/* Header & Workflow Toolbar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5">
+          <Button variant="outline" size="icon" onClick={onClose} className="h-8 w-8 rounded-xl border-[var(--mer-border-glow)] text-mer-muted hover:text-mer-text">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-mer-text flex items-center gap-2">
               {articleId ? 'Edit KB Article' : 'Create KB Article'}
             </h1>
             {article && (
-              <p className="text-xs text-muted-foreground">
-                Slug: <span className="font-mono bg-muted py-0.5 px-1.5 rounded">{article.slug}</span>
+              <p className="text-[10px] text-mer-muted mt-0.5">
+                Slug: <span className="font-mono bg-[rgba(7,12,22,0.4)] border border-[var(--mer-border-glow)] py-0.5 px-2 rounded-lg text-mer-cyan">{article.slug}</span>
               </p>
             )}
           </div>
@@ -298,7 +299,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                   variant="outline"
                   size="sm"
                   onClick={() => handleStatusTransition('review')}
-                  className="gap-1.5 text-blue-600 border-blue-500/20 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                  className="gap-1.5 border-mer-blue/30 text-mer-blue bg-mer-blue/10 hover:bg-mer-blue/20"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Submit for Review
@@ -310,15 +311,15 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                     variant="outline"
                     size="sm"
                     onClick={() => handleStatusTransition('draft')}
-                    className="gap-1.5 text-yellow-600 border-yellow-500/20 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                    className="gap-1.5 border-mer-amber/30 text-mer-amber bg-mer-amber/10 hover:bg-mer-amber/20"
                   >
                     Send back to Draft
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="glow"
                     size="sm"
                     onClick={() => handleStatusTransition('published')}
-                    className="gap-1.5 text-emerald-600 border-emerald-500/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                    className="gap-1.5"
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
                     Publish Article
@@ -330,13 +331,20 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                   variant="outline"
                   size="sm"
                   onClick={() => handleStatusTransition('archived')}
-                  className="gap-1.5 text-red-600 border-red-500/20 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  className="gap-1.5 border-mer-red/30 text-mer-red bg-mer-red/10 hover:bg-mer-red/20"
                 >
                   <Archive className="h-3.5 w-3.5" />
                   Archive
                 </Button>
               )}
-              <Badge className="capitalize text-xs font-semibold py-1 px-2.5">
+              <Badge
+                variant={
+                  article.status === 'published' ? 'green' :
+                  article.status === 'review' ? 'blue' :
+                  article.status === 'draft' ? 'amber' : 'red'
+                }
+                className="capitalize text-xs font-semibold py-1 px-2.5"
+              >
                 Status: {article.status}
               </Badge>
             </>
@@ -347,43 +355,43 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form Panel */}
         <form onSubmit={handleSave} className="lg:col-span-2 space-y-6">
-          <Card className="p-6 border-border/80 bg-card space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-              <FileText className="h-4 w-4 text-primary" /> Article Content
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-6 space-y-5">
+            <h3 className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted flex items-center gap-1.5 border-b border-[var(--mer-border-glow)] pb-2">
+              <FileText className="h-4 w-4 text-mer-cyan" /> Article Content
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Title</label>
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Title</label>
                 <Input
                   disabled={isArchived}
                   placeholder="e.g. How to connect to VPN"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full"
+                  className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Category</label>
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Category</label>
                 <select
                   disabled={isArchived}
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 text-sm text-mer-text outline-none focus:border-[var(--mer-border-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="" disabled className="text-muted-foreground">Select a category...</option>
+                  <option value="" disabled className="text-mer-muted">Select a category...</option>
                   {renderCategoryOptions()}
                 </select>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Content (Markdown)</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Content (Markdown)</label>
               <Tabs defaultValue="edit" className="w-full">
-                <TabsList className="grid w-40 grid-cols-2 mb-2">
-                  <TabsTrigger value="edit">Edit</TabsTrigger>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                <TabsList className="grid w-40 grid-cols-2 mb-2 bg-[rgba(7,12,22,0.7)] rounded-xl border border-[var(--mer-border-glow)] p-1 h-9">
+                  <TabsTrigger value="edit" className="rounded-lg text-xs font-semibold py-1.5">Edit</TabsTrigger>
+                  <TabsTrigger value="preview" className="rounded-lg text-xs font-semibold py-1.5">Preview</TabsTrigger>
                 </TabsList>
                 <TabsContent value="edit" className="mt-0">
                   <textarea
@@ -392,11 +400,11 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     rows={12}
-                    className="flex min-h-[300px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                    className="flex min-h-[300px] w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] px-4 py-3 text-sm text-mer-text placeholder:text-mer-muted outline-none focus:border-[var(--mer-border-hover)] disabled:cursor-not-allowed disabled:opacity-50 font-mono resize-none leading-relaxed"
                   />
                 </TabsContent>
                 <TabsContent value="preview" className="mt-0">
-                  <div className="min-h-[300px] w-full rounded-md border border-border bg-muted/20 p-4 overflow-y-auto">
+                  <div className="min-h-[300px] w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.3)] p-4 overflow-y-auto max-h-[400px]">
                     {renderMarkdownPreview(content)}
                   </div>
                 </TabsContent>
@@ -404,7 +412,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">
                 Version Summary / Change Log
               </label>
               <Input
@@ -412,7 +420,7 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                 placeholder={articleId ? 'What changes did you make in this version?' : 'Initial creation details...'}
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                className="w-full text-sm"
+                className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
               />
             </div>
 
@@ -424,61 +432,58 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                 </Button>
               </div>
             )}
-          </Card>
+          </div>
         </form>
 
         {/* Sidebar History Panel */}
         <div className="space-y-6">
-          <Card className="p-6 border-border/80 bg-card space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <History className="h-4 w-4 text-primary" /> Version History
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-6 space-y-4">
+            <h3 className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted flex items-center gap-2 border-b border-[var(--mer-border-glow)] pb-2">
+              <History className="h-4 w-4 text-mer-cyan" /> Version History
             </h3>
 
             {versions.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No version history yet.</p>
+              <p className="text-xs text-mer-muted italic">No version history yet.</p>
             ) : (
-              <div className="relative border-l border-border pl-4 space-y-6 py-2">
+              <div className="relative border-l border-[var(--mer-border-glow)] pl-4 space-y-6 py-2">
                 {versions.map((ver, idx) => {
                   const isActive = ver.id === article?.currentVersionId;
-                  const versionIndex = versions.length - idx; // v1, v2 count from bottom
-                  
+                  const versionIndex = versions.length - idx;
                   return (
                     <div key={ver.id} className="relative group">
-                      {/* Timeline node dot */}
+                      {/* Timeline dot node */}
                       <div
-                        className={`absolute -left-[21px] top-1.5 h-3 w-3 rounded-full border-2 bg-background ${
+                        className={`absolute -left-[21px] top-1.5 h-3 w-3 rounded-full border-2 bg-[var(--mer-bg-base)] transition-all ${
                           isActive
-                            ? 'border-primary scale-125'
-                            : 'border-muted-foreground/40'
+                            ? 'border-mer-cyan scale-125 shadow-[0_0_8px_var(--mer-glow-cyan)]'
+                            : 'border-mer-muted/40'
                         }`}
                       />
                       
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-xs font-bold text-foreground">
+                          <span className="font-mono text-xs font-bold text-mer-text">
                             Version {versionIndex}
                             {isActive && (
-                              <Badge className="ml-1.5 py-0 px-1 text-[9px] uppercase font-semibold">Active</Badge>
+                              <Badge variant="cyan" className="ml-1.5 py-0 px-1 text-[9px] uppercase">Active</Badge>
                             )}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                          <button
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-mer-muted hover:bg-white/5 hover:text-mer-cyan transition-all cursor-pointer"
                             onClick={() => setViewingVersion(ver)}
                             title="View Snapshot"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                          </Button>
+                          </button>
                         </div>
 
                         {ver.summary && (
-                          <p className="text-xs text-foreground/80 font-medium line-clamp-2">
+                          <p className="text-xs text-mer-text/80 font-medium line-clamp-2 leading-relaxed">
                             {ver.summary}
                           </p>
                         )}
 
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-2 text-[10px] text-mer-muted">
                           <span className="flex items-center gap-0.5">
                             <Calendar className="h-2.5 w-2.5" />
                             {new Date(ver.createdAt).toLocaleDateString()}
@@ -490,54 +495,52 @@ export function KbEditor({ articleId, initialCategoryId, onClose }: KbEditorProp
                 })}
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </div>
 
       {/* Snapshot Modal */}
       {viewingVersion && (
         <Dialog open={!!viewingVersion} onOpenChange={() => setViewingVersion(null)}>
-          <DialogContent className="sm:max-w-[700px] border-border bg-card">
+          <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <History className="h-5 w-5 text-primary" /> Article Version Snapshot
+                <History className="h-4 w-4 text-mer-cyan" /> Article Version Snapshot
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4 text-xs bg-muted/30 p-3 rounded-lg border border-border/40">
+              <div className="grid grid-cols-2 gap-4 text-xs bg-[rgba(7,12,22,0.4)] p-4 rounded-xl border border-[var(--mer-border-glow)]">
                 <div className="space-y-1">
-                  <span className="text-muted-foreground block font-medium">Snapshot Title:</span>
-                  <span className="font-bold text-foreground">{viewingVersion.title}</span>
+                  <span className="text-mer-muted block font-medium">Snapshot Title:</span>
+                  <span className="font-bold text-mer-text">{viewingVersion.title}</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-muted-foreground block font-medium">Created On:</span>
-                  <span className="text-foreground font-semibold">{new Date(viewingVersion.createdAt).toLocaleString()}</span>
+                  <span className="text-mer-muted block font-medium">Created On:</span>
+                  <span className="text-mer-text font-semibold">{new Date(viewingVersion.createdAt).toLocaleString()}</span>
                 </div>
-                <div className="col-span-2 space-y-1 pt-1.5 border-t border-border/40">
-                  <span className="text-muted-foreground block font-medium">Change Summary:</span>
-                  <span className="text-foreground font-semibold italic">"{viewingVersion.summary || 'No summary provided.'}"</span>
+                <div className="col-span-2 space-y-1 pt-2 border-t border-[var(--mer-border-glow)]">
+                  <span className="text-mer-muted block font-medium">Change Summary:</span>
+                  <span className="text-mer-cyan font-semibold italic">"{viewingVersion.summary || 'No summary provided.'}"</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">
                   Content Snapshot
                 </label>
-                <div className="bg-muted p-4 rounded-lg font-mono text-xs border border-border/80 whitespace-pre-wrap leading-relaxed select-all max-h-[300px] overflow-y-auto">
+                <div className="bg-[rgba(7,12,22,0.6)] p-4 rounded-xl font-mono text-xs border border-[var(--mer-border-glow)] text-mer-text whitespace-pre-wrap leading-relaxed select-all max-h-[300px] overflow-y-auto">
                   {viewingVersion.content}
                 </div>
               </div>
 
               {/* Action to restore this past version */}
               {article && !isArchived && viewingVersion.id !== article.currentVersionId && (
-                <div className="flex justify-between items-center pt-4 border-t border-border/50 gap-4">
-                  <p className="text-[10px] text-muted-foreground max-w-sm">
+                <div className="flex flex-col gap-3 pt-4 border-t border-[var(--mer-border-glow)] sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-[10px] text-mer-muted max-w-sm">
                     Restoring this snapshot will create a new version snapshot matching this text and set it as current.
                   </p>
                   <Button
-                    size="sm"
-                    className="gap-1 shrink-0"
                     onClick={async () => {
                       if (!confirm(`Are you sure you want to restore this version snapshot?`)) return;
                       try {

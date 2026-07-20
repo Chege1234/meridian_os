@@ -12,7 +12,18 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        // Meridian glass panel base
+        "group/card relative flex flex-col gap-(--card-spacing) overflow-hidden",
+        "rounded-[16px] py-(--card-spacing) text-sm",
+        "bg-[var(--mer-surface)] backdrop-blur-md",
+        "border border-[var(--mer-border-glow)]",
+        "text-mer-text",
+        "transition-all duration-300",
+        "hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_24px_var(--mer-glow-cyan)]",
+        "[--card-spacing:--spacing(4)]",
+        "has-data-[slot=card-footer]:pb-0",
+        "has-[>img:first-child]:pt-0",
+        "data-[size=sm]:[--card-spacing:--spacing(3)]",
         className
       )}
       {...props}

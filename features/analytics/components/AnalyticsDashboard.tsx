@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 /**
- * Feature Component — AnalyticsDashboard
+ * Feature Component â€” AnalyticsDashboard
  *
  * Tying together Personal Dashboards (widgets grid + customizer) and Saved Reports.
  * Manages date ranges, active dashboard layouts, loading states, and mutations.
@@ -225,25 +225,30 @@ export default function AnalyticsDashboard() {
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 text-slate-100">
-      {/* Header controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-900 pb-5">
+    <div className="animate-fade-up space-y-6">
+      {/* â”€â”€ Page header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
-            Operations Analytics
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
+            Meridian OS
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">
+            Analytics
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Realtime reporting, cost aggregations, and business metrics across Meridian OS modules.
+          <p className="mt-1 text-sm text-mer-muted">
+            Realtime reporting, cost aggregations, and metrics across all modules.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Dashboard Selector */}
+          {/* Dashboard selector */}
           {activeTab === 'dashboard' && !isCustomizing && dashboards.length > 0 && (
             <select
               value={activeDashboard?.id || ''}
-              onChange={(e) => setActiveDashboard(dashboards.find((d) => d.id === e.target.value) || null)}
-              className="rounded-md border border-slate-800 bg-slate-950 text-xs text-slate-300 p-2 focus:outline-none"
+              onChange={(e) =>
+                setActiveDashboard(dashboards.find((d) => d.id === e.target.value) || null)
+              }
+              className="rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.7)] px-3 py-1.5 text-xs text-mer-text outline-none focus:border-[var(--mer-border-hover)]"
             >
               {dashboards.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -261,17 +266,15 @@ export default function AnalyticsDashboard() {
                 variant="outline"
                 size="icon"
                 onClick={() => setIsCustomizing(true)}
-                className="h-8 w-8 border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
                 title="Customize widgets"
               >
                 <Settings className="h-4 w-4" />
               </Button>
               {activeDashboard && (
                 <Button
-                  variant="ghost"
+                  variant="destructive"
                   size="icon"
                   onClick={handleDeleteDashboard}
-                  className="h-8 w-8 text-rose-500 hover:bg-rose-950/20 hover:text-rose-400"
                   title="Delete dashboard"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -282,38 +285,31 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-900 gap-6">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setActiveTab('dashboard');
-            setIsCustomizing(false);
-          }}
-          className={`pb-3 rounded-none border-b-2 text-xs font-semibold px-1 ${
-            activeTab === 'dashboard'
-              ? 'border-sky-500 text-sky-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <LayoutGrid className="h-4 w-4 mr-1.5 inline-block align-text-bottom" />
-          Dashboard View
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() => setActiveTab('reports')}
-          className={`pb-3 rounded-none border-b-2 text-xs font-semibold px-1 ${
-            activeTab === 'reports'
-              ? 'border-sky-500 text-sky-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <FileSpreadsheet className="h-4 w-4 mr-1.5 inline-block align-text-bottom" />
-          Saved Reports
-        </Button>
+      {/* â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="flex gap-1 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] p-1 w-fit backdrop-blur-sm">
+        {([
+          { key: 'dashboard', label: 'Dashboard View', icon: LayoutGrid },
+          { key: 'reports',   label: 'Saved Reports',  icon: FileSpreadsheet },
+        ] as const).map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => {
+              setActiveTab(key);
+              if (key === 'dashboard') setIsCustomizing(false);
+            }}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-150 cursor-pointer ${
+              activeTab === key
+                ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)] shadow-[0_0_8px_rgba(77,216,255,0.15)]'
+                : 'text-mer-muted hover:text-mer-text'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Main Tab Views */}
+      {/* â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {activeTab === 'dashboard' ? (
         isCustomizing ? (
           <DashboardCustomizer
@@ -323,17 +319,21 @@ export default function AnalyticsDashboard() {
             saving={savingLayout}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-4">
+            {/* Pending approvals alert */}
             {(pendingAutosCount > 0 || pendingAgentsCount > 0) && (
-              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-col gap-4 rounded-[16px] border border-[rgba(232,169,60,0.25)] bg-[rgba(232,169,60,0.06)] p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-500/20 rounded text-amber-500 shrink-0">
-                    <Settings className="h-5 w-5 animate-spin" />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[rgba(232,169,60,0.15)]">
+                    <Settings className="h-4 w-4 animate-spin text-mer-amber" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-amber-400">Pending Approvals Queue</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      You have {pendingAutosCount} rule-based runs and {pendingAgentsCount} agent-proposed runs staged waiting for confirmation.
+                    <p className="text-sm font-semibold text-mer-amber">
+                      Pending Approvals Queue
+                    </p>
+                    <p className="text-xs text-mer-muted mt-0.5">
+                      {pendingAutosCount} rule-based run{pendingAutosCount !== 1 ? 's' : ''} and{' '}
+                      {pendingAgentsCount} agent-proposed run{pendingAgentsCount !== 1 ? 's' : ''} awaiting confirmation.
                     </p>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export default function AnalyticsDashboard() {
                   {pendingAutosCount > 0 && (
                     <Link
                       href="/automation"
-                      className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-semibold"
+                      className="rounded-xl border border-[rgba(232,169,60,0.3)] bg-[rgba(232,169,60,0.12)] px-4 py-1.5 text-xs font-semibold text-mer-amber transition-colors hover:bg-[rgba(232,169,60,0.2)]"
                     >
                       Review Automations
                     </Link>
@@ -349,7 +349,7 @@ export default function AnalyticsDashboard() {
                   {pendingAgentsCount > 0 && (
                     <Link
                       href="/agents"
-                      className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-semibold"
+                      className="rounded-xl border border-[rgba(232,169,60,0.3)] bg-[rgba(232,169,60,0.12)] px-4 py-1.5 text-xs font-semibold text-mer-amber transition-colors hover:bg-[rgba(232,169,60,0.2)]"
                     >
                       Review AI Agents
                     </Link>
@@ -357,19 +357,26 @@ export default function AnalyticsDashboard() {
                 </div>
               </div>
             )}
-            {/* Render Widgets Grid */}
 
-            {activeLayout
-              .sort((a, b) => a.position - b.position)
-              .map((widget) => {
-                return (
-                  <Card key={widget.id} className="border-slate-800 bg-slate-950/40 shadow-md">
-                    <CardHeader className="flex flex-row items-center justify-between pb-3">
-                      <CardTitle className="text-sm font-semibold tracking-wide text-slate-200 uppercase">
+            {/* Widget grid â€” each widget in a glass panel */}
+            <div className="grid grid-cols-1 gap-4">
+              {activeLayout
+                .sort((a, b) => a.position - b.position)
+                .map((widget) => (
+                  <div
+                    key={widget.id}
+                    className="relative overflow-hidden rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md transition-all duration-300 hover:border-[var(--mer-border-hover)] hover:shadow-[0_0_24px_var(--mer-glow-cyan)]"
+                  >
+                    {/* Widget header */}
+                    <div className="flex items-center justify-between border-b border-[var(--mer-border-glow)] px-5 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
                         {widget.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-2">
+                      </p>
+                      <RefreshCw className="h-3 w-3 text-mer-muted/40" />
+                    </div>
+
+                    {/* Widget content */}
+                    <div className="p-5">
                       {widget.type === 'campaign_performance' && (
                         <CampaignPerformanceChart data={campaignData} loading={loadingData} />
                       )}
@@ -382,10 +389,10 @@ export default function AnalyticsDashboard() {
                       {widget.type === 'ai_cost' && (
                         <AiCostChart data={aiData} loading={loadingData} />
                       )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         )
       ) : (

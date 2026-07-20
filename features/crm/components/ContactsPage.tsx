@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 /**
- * Feature Component — Contacts Page
+ * Feature Component â€” Contacts Page
  *
  * Searchable, filterable list of CRM contacts using TanStack Table + shared UI components.
  * Per BR-800: duplicate contacts are flagged with a visual indicator.
@@ -104,7 +104,7 @@ export function ContactsPage() {
     }),
     columnHelper.accessor('organization', {
       header: 'Organization',
-      cell: (info) => info.getValue() || <span className="text-muted-foreground/60">—</span>,
+      cell: (info) => info.getValue() || <span className="text-muted-foreground/60">â€”</span>,
     }),
     columnHelper.accessor('email', {
       header: 'Contact Details',
@@ -115,7 +115,7 @@ export function ContactsPage() {
             {contact.email && <span className="text-foreground">{contact.email}</span>}
             {contact.phone && <span className="text-muted-foreground">{contact.phone}</span>}
             {!contact.email && !contact.phone && (
-              <span className="text-muted-foreground/60">—</span>
+              <span className="text-muted-foreground/60">â€”</span>
             )}
           </div>
         );
@@ -170,89 +170,86 @@ export function ContactsPage() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Title + Action */}
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-up space-y-6">
+      {/* Page header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Contacts (CRM)
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your organizations and contact list.
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-mer-muted">
+            CRM
           </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">Contacts</h1>
+          <p className="mt-1 text-sm text-mer-muted">Manage your organisations and contact list.</p>
         </div>
         <NewContactDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ['contacts'] })} />
       </div>
 
-      {/* Controls: Search & Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border border-border/80">
+      {/* Controls */}
+      <div className="flex flex-col gap-3 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mer-muted" />
           <Input
-            placeholder="Search contacts..."
+            placeholder="Search contactsâ€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
           />
         </div>
-        <div className="flex items-center gap-2">
-          {(['active', 'archived', 'all'] as const).map((filter) => (
-            <Button
-              key={filter}
-              variant={statusFilter === filter ? 'default' : 'outline'}
-              size="sm"
-              className="capitalize text-xs font-medium"
-              onClick={() => setStatusFilter(filter)}
+        <div className="flex items-center gap-1 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] p-1">
+          {(['active', 'archived', 'all'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all duration-150 cursor-pointer ${
+                statusFilter === f
+                  ? 'bg-[rgba(77,216,255,0.12)] text-mer-cyan border border-[rgba(77,216,255,0.25)]'
+                  : 'text-mer-muted hover:text-mer-text'
+              }`}
             >
-              {filter}
-            </Button>
+              {f}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Table grid */}
-      <div className="rounded-lg border border-border/80 bg-card overflow-hidden">
-        {loading ? (
-          <div className="space-y-3 p-6">
-            <div className="h-6 w-full animate-pulse rounded bg-muted" />
-            <div className="h-20 w-full animate-pulse rounded bg-muted" />
-            <div className="h-20 w-full animate-pulse rounded bg-muted" />
-          </div>
-        ) : contacts.length > 0 ? (
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((hg) => (
-                <TableRow key={hg.id} className="hover:bg-transparent">
-                  {hg.headers.map((h) => (
-                    <TableHead key={h.id} className="text-xs uppercase font-semibold text-muted-foreground px-4 py-3">
-                      {flexRender(h.column.columnDef.header, h.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/30">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3.5 text-sm">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <AlertTriangle className="h-8 w-8 text-muted-foreground/60" />
-            <h3 className="mt-4 text-sm font-semibold text-foreground">No contacts found</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try adjusting your search terms or add a new contact.
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Table */}
+      {loading ? (
+        <div className="space-y-3 rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] p-6">
+          {[1,2,3].map((i) => (
+            <div key={i} className="h-10 w-full animate-pulse rounded-xl bg-white/[0.04]" />
+          ))}
+        </div>
+      ) : contacts.length > 0 ? (
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent">
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id}>
+                    {flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="flex flex-col items-center justify-center rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] py-16 text-center backdrop-blur-md">
+          <AlertTriangle className="h-8 w-8 text-mer-muted/60" />
+          <h3 className="mt-4 text-sm font-semibold text-mer-text">No contacts found</h3>
+          <p className="mt-1 text-xs text-mer-muted">Try adjusting your search terms or add a new contact.</p>
+        </div>
+      )}
     </div>
   );
 }

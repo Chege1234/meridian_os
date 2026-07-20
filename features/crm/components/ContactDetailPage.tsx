@@ -150,57 +150,57 @@ export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
+    <div className="animate-fade-up space-y-6">
       {/* Back Button */}
       <div>
         <Link href="/crm" passHref>
-          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+          <Button variant="outline" size="sm" className="gap-1.5 border-[var(--mer-border-glow)] text-mer-muted hover:text-mer-text">
             <ArrowLeft className="h-4 w-4" /> Back to CRM
           </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 items-start">
         {/* Left Panel: Profile Info Card */}
         <div className="md:col-span-1 space-y-4">
-          <Card className="border border-border/80 shadow-sm bg-card overflow-hidden">
-            <CardHeader className="bg-muted/30 border-b border-border/40 pb-4">
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md overflow-hidden">
+            <div className="border-b border-[var(--mer-border-glow)] px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-base">
+                <div className="h-10 w-10 rounded-full bg-[rgba(77,216,255,0.12)] border border-[rgba(77,216,255,0.25)] flex items-center justify-center text-mer-cyan font-bold text-sm shadow-[0_0_8px_rgba(77,216,255,0.15)]">
                   {contact.name.substring(0, 2).toUpperCase()}
                 </div>
-                <div>
-                  <CardTitle className="text-lg font-bold tracking-tight text-foreground line-clamp-1">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold tracking-tight text-mer-text truncate">
                     {contact.name}
-                  </CardTitle>
+                  </h2>
                   {contact.organization && (
-                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                      <Building className="h-3 w-3" />
-                      {contact.organization}
+                    <div className="flex items-center gap-1 mt-0.5 text-xs text-mer-muted">
+                      <Building className="h-3.5 w-3.5" />
+                      <span className="truncate">{contact.organization}</span>
                     </div>
                   )}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            </div>
+            <div className="p-5">
               {!editing ? (
                 // View Mode
-                <div className="space-y-4 text-sm">
+                <div className="space-y-4 text-xs">
                   {contact.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-foreground truncate">{contact.email}</span>
+                    <div className="flex items-center gap-2 text-mer-text">
+                      <Mail className="h-4 w-4 text-mer-cyan shrink-0" />
+                      <span className="truncate">{contact.email}</span>
                     </div>
                   )}
                   {contact.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-foreground">{contact.phone}</span>
+                    <div className="flex items-center gap-2 text-mer-text">
+                      <Phone className="h-4 w-4 text-mer-cyan shrink-0" />
+                      <span>{contact.phone}</span>
                     </div>
                   )}
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
-                    <p className="text-xs text-foreground/80 leading-relaxed bg-muted/40 p-2.5 rounded border border-border/20 whitespace-pre-wrap min-h-[80px]">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Notes</span>
+                    <p className="text-xs text-mer-text/80 leading-relaxed bg-[rgba(7,12,22,0.4)] p-3 rounded-xl border border-[var(--mer-border-glow)] whitespace-pre-wrap min-h-[90px]">
                       {contact.notes || 'No notes added.'}
                     </p>
                   </div>
@@ -210,107 +210,118 @@ export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
                 </div>
               ) : (
                 // Edit Form Mode
-                <form onSubmit={handleSubmit(onSave)} className="space-y-4 text-sm">
+                <form onSubmit={handleSubmit(onSave)} className="space-y-4 text-xs">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground">Name</label>
-                    <Input {...register('name')} placeholder="Full name" />
-                    {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Name</label>
+                    <Input
+                      {...register('name')}
+                      placeholder="Full name"
+                      className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
+                    />
+                    {errors.name && <p className="text-xs text-mer-red mt-0.5">{errors.name.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground">Organization</label>
-                    <Input {...register('organization')} placeholder="Organization" />
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Organization</label>
+                    <Input
+                      {...register('organization')}
+                      placeholder="Organization"
+                      className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground">Email</label>
-                    <Input {...register('email')} type="text" placeholder="Email" />
-                    {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Email</label>
+                    <Input
+                      {...register('email')}
+                      type="text"
+                      placeholder="Email"
+                      className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
+                    />
+                    {errors.email && <p className="text-xs text-mer-red mt-0.5">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground">Phone</label>
-                    <Input {...register('phone')} placeholder="Phone" />
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Phone</label>
+                    <Input
+                      {...register('phone')}
+                      placeholder="Phone"
+                      className="bg-[rgba(7,12,22,0.6)] border-[var(--mer-border-glow)] text-mer-text placeholder:text-mer-muted focus:border-[var(--mer-border-hover)]"
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground">Notes</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-widest text-mer-muted">Notes</label>
                     <textarea
                       {...register('notes')}
                       placeholder="Notes..."
                       rows={3}
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                      className="flex w-full rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(7,12,22,0.6)] px-3 py-2 text-xs text-mer-text placeholder:text-mer-muted outline-none focus:border-[var(--mer-border-hover)] resize-none"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setEditing(false)}>
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setEditing(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" size="sm" className="flex-1" disabled={!isDirty}>
+                    <Button type="submit" className="flex-1" disabled={!isDirty}>
                       Save
                     </Button>
                   </div>
                 </form>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Right Panel: Tabs for Timeline & Tasks */}
         <div className="md:col-span-2 space-y-4">
-          <Card className="border border-border/80 shadow-sm bg-card">
-            <CardContent className="p-5">
-              <Tabs defaultValue="timeline">
-                <div className="flex items-center justify-between border-b border-border/60 pb-3 mb-4">
-                  <div className="flex gap-1">
-                    <Badge variant="outline" className="text-sm font-semibold border-none px-3 py-1 cursor-pointer">
-                      Activities & Timeline
-                    </Badge>
-                  </div>
-                  <LogInteractionDialog contactId={contact.id} onSuccess={loadDetail} />
-                </div>
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-5">
+            <div className="flex items-center justify-between border-b border-[var(--mer-border-glow)] pb-3 mb-4">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-mer-muted flex items-center gap-1.5">
+                Activities & Timeline
+              </span>
+              <LogInteractionDialog contactId={contact.id} onSuccess={loadDetail} />
+            </div>
 
-                {/* Timeline content */}
-                <div className="space-y-4">
-                  {interactions.length > 0 ? (
-                    <div className="relative pl-6 border-l border-border/60 space-y-6">
-                      {interactions.map((interaction) => (
-                        <div key={interaction.id} className="relative">
-                          {/* Timeline Dot Icon */}
-                          <span className="absolute -left-[35px] top-1 flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-background shadow-sm">
-                            {getInteractionIcon(interaction.type)}
+            {/* Timeline content */}
+            <div className="space-y-4">
+              {interactions.length > 0 ? (
+                <div className="relative pl-6 border-l border-[var(--mer-border-glow)] space-y-6">
+                  {interactions.map((interaction) => (
+                    <div key={interaction.id} className="relative">
+                      {/* Timeline Dot Icon */}
+                      <span className="absolute -left-[37px] top-1 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--mer-border-glow)] bg-[var(--mer-bg-base)] shadow-sm text-mer-text">
+                        {getInteractionIcon(interaction.type)}
+                      </span>
+
+                      {/* Interaction Info */}
+                      <div className="space-y-1 bg-[rgba(13,20,35,0.7)] border border-[var(--mer-border-glow)] p-3.5 rounded-xl hover:border-[var(--mer-border-hover)] transition-all">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold capitalize text-mer-text">
+                            {interaction.type} logged
                           </span>
-
-                          {/* Interaction Info */}
-                          <div className="space-y-1 bg-muted/20 border border-border/40 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-semibold capitalize text-foreground">
-                                {interaction.type} logged
-                              </span>
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
-                                <Calendar className="h-3 w-3" />
-                                {formatDateTime(interaction.occurredAt)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                              {interaction.content}
-                            </p>
-                          </div>
+                          <span className="text-[10px] text-mer-muted flex items-center gap-1 font-mono">
+                            <Calendar className="h-3 w-3" />
+                            {formatDateTime(interaction.occurredAt)}
+                          </span>
                         </div>
-                      ))}
+                        <p className="text-xs text-mer-text/80 leading-relaxed whitespace-pre-wrap">
+                          {interaction.content}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <FileText className="h-8 w-8 text-muted-foreground/40" />
-                      <h4 className="mt-3 text-xs font-semibold text-foreground">No interactions logged</h4>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Use Log Activity to append logs.</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </Tabs>
-            </CardContent>
-          </Card>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <FileText className="h-8 w-8 text-mer-muted/40" />
+                  <h4 className="mt-3 text-xs font-semibold text-mer-text">No interactions logged</h4>
+                  <p className="text-[11px] text-mer-muted mt-0.5">Use Log Activity to append logs.</p>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Associated Tasks Board panel */}
-          <Card className="border border-border/80 shadow-sm bg-card p-5">
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-5">
             <TaskBoard contactId={contact.id} contactName={contact.name} />
-          </Card>
+          </div>
         </div>
       </div>
     </div>

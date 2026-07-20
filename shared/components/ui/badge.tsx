@@ -9,16 +9,20 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-        secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
-        destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
-        outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
-        ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        /* shadcn originals — preserved */
+        default:     "bg-primary/15 text-primary border-primary/20 [a]:hover:bg-primary/25",
+        secondary:   "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+        destructive: "bg-destructive/10 text-destructive border-destructive/20 focus-visible:ring-destructive/20 [a]:hover:bg-destructive/20",
+        outline:     "border-border text-foreground [a]:hover:bg-muted",
+        ghost:       "hover:bg-muted hover:text-muted-foreground",
+        link:        "text-primary underline-offset-4 hover:underline",
+        /* Meridian semantic variants */
+        cyan:   "bg-[rgba(77,216,255,0.12)]  text-mer-cyan  border-[rgba(77,216,255,0.25)]",
+        green:  "bg-[rgba(52,211,153,0.12)]  text-mer-green border-[rgba(52,211,153,0.25)]",
+        amber:  "bg-[rgba(232,169,60,0.12)]  text-mer-amber border-[rgba(232,169,60,0.25)]",
+        red:    "bg-[rgba(240,87,107,0.12)]  text-mer-red   border-[rgba(240,87,107,0.25)]",
+        blue:   "bg-[rgba(59,130,246,0.12)]  text-mer-blue  border-[rgba(59,130,246,0.25)]",
+        muted:  "bg-white/5 text-mer-muted border-[var(--mer-border-glow)]",
       },
     },
     defaultVariants: {
