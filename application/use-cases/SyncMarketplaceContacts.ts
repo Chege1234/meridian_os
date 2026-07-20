@@ -27,7 +27,7 @@ export async function syncMarketplaceContacts(deps: Dependencies) {
   const hostMatch = marketplaceDbUrl.match(/@([^:]+):/);
   if (hostMatch) {
     const host = hostMatch[1];
-    if (host.endsWith('.supabase.co') && !host.startsWith('db.')) {
+    if (host && host.endsWith('.supabase.co') && !host.startsWith('db.')) {
       marketplaceDbUrl = marketplaceDbUrl.replace(`@${host}:`, `@db.${host}:`);
     }
   }
