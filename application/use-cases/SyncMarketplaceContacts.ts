@@ -18,9 +18,14 @@ interface Dependencies {
 }
 
 export async function syncMarketplaceContacts(deps: Dependencies) {
-  const marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
+  let marketplaceDbUrl = process.env.CAMPUS_MARKETPLACE_DATABASE_URL;
   if (!marketplaceDbUrl) {
     return { success: false, error: 'CAMPUS_MARKETPLACE_DATABASE_URL environment variable is missing.' };
+  }
+
+  // Defensively rewrite port 5432 to 6543 (PgBouncer pooler port) for serverless compatibility
+  if (marketplaceDbUrl.includes(':5432/')) {
+    marketplaceDbUrl = marketplaceDbUrl.replace(':5432/', ':6543/');
   }
 
   const lastSyncSetting = await getSetting('campus_marketplace_last_sync', { settingRepository: deps.settingRepository });
