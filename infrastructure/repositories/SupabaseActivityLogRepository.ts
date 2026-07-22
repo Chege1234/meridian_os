@@ -15,25 +15,53 @@ export function createSupabaseActivityLogRepository(
 ): ActivityLogRepository {
   return {
     async create(input: CreateActivityLogInput): Promise<ActivityLog> {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .insert({
-          user_id: input.userId,
+      try {
+        const { data, error } = await supabase
+          .from('activity_logs')
+          .insert({
+            user_id: input.userId,
+            action: input.action,
+            module: input.module,
+            entity: input.entity ?? null,
+            entity_id: input.entityId ?? null,
+            metadata: input.metadata ?? null,
+            ip_address: input.ipAddress ?? null,
+          })
+          .select('*')
+          .single();
+
+        if (error || !data) {
+          // Non-fatal: log the failure but never throw — activity logging must
+          // never break a user-facing action (BR-1200 intent preserved).
+          console.warn('[ActivityLog] Insert failed (non-fatal):', error?.message ?? 'no data returned');
+          return {
+            id: crypto.randomUUID(),
+            userId: input.userId,
+            action: input.action,
+            module: input.module,
+            entity: input.entity ?? null,
+            entityId: input.entityId ?? null,
+            metadata: input.metadata ?? null,
+            ipAddress: input.ipAddress ?? null,
+            createdAt: new Date(),
+          };
+        }
+
+        return mapToActivityLog(data);
+      } catch (err: any) {
+        console.warn('[ActivityLog] Unexpected error (non-fatal):', err?.message);
+        return {
+          id: crypto.randomUUID(),
+          userId: input.userId,
           action: input.action,
           module: input.module,
           entity: input.entity ?? null,
-          entity_id: input.entityId ?? null,
+          entityId: input.entityId ?? null,
           metadata: input.metadata ?? null,
-          ip_address: input.ipAddress ?? null,
-        })
-        .select('*')
-        .single();
-
-      if (error || !data) {
-        throw new Error(`Failed to create activity log: ${error?.message}`);
+          ipAddress: input.ipAddress ?? null,
+          createdAt: new Date(),
+        };
       }
-
-      return mapToActivityLog(data);
     },
 
     async findByUserId(
