@@ -130,72 +130,7 @@ function TechCard({
   );
 }
 
-/* ============================================================================
- * 2. HOLOGRAPHIC GLOBE BASE (concentric 3D platform with projection rays)
- * ============================================================================ */
-function HolographicBase() {
-  return (
-    <div className="absolute bottom-[20px] left-1/2 -translate-x-1/2 w-[340px] h-[90px] pointer-events-none flex flex-col items-center justify-center">
-      <div 
-        className="relative w-full h-full flex items-center justify-center"
-        style={{
-          perspective: '1000px',
-          transformStyle: 'preserve-3d',
-        }}
-      >
-        {/* Ring 1 (outermost) */}
-        <div 
-          className="absolute rounded-full border border-mer-cyan/15 w-[300px] h-[75px] animate-pulse"
-          style={{
-            transform: 'rotateX(75deg)',
-            boxShadow: '0 0 20px rgba(77,216,255,0.05), inset 0 0 20px rgba(77,216,255,0.05)',
-          }}
-        />
-        {/* Ring 2 */}
-        <div 
-          className="absolute rounded-full border border-mer-cyan/30 w-[240px] h-[60px]"
-          style={{
-            transform: 'rotateX(75deg)',
-            boxShadow: '0 0 15px rgba(77,216,255,0.08), inset 0 0 15px rgba(77,216,255,0.08)',
-          }}
-        />
-        {/* Ring 3 */}
-        <div 
-          className="absolute rounded-full border-2 border-mer-cyan/50 w-[180px] h-[45px]"
-          style={{
-            transform: 'rotateX(75deg)',
-            boxShadow: '0 0 25px rgba(77,216,255,0.2), inset 0 0 20px rgba(77,216,255,0.2)',
-          }}
-        />
-        {/* Ring 4 (inner) */}
-        <div 
-          className="absolute rounded-full border-2 border-mer-cyan w-[110px] h-[28px]"
-          style={{
-            transform: 'rotateX(75deg)',
-            boxShadow: '0 0 30px rgba(77,216,255,0.45), inset 0 0 30px rgba(77,216,255,0.45)',
-          }}
-        />
-        {/* Ring 5 (center dot/core) */}
-        <div 
-          className="absolute rounded-full bg-mer-cyan w-[45px] h-[12px] blur-[1px]"
-          style={{
-            transform: 'rotateX(75deg)',
-            boxShadow: '0 0 40px rgba(77,216,255,0.95)',
-          }}
-        />
-        
-        {/* Projector light beam extending upwards */}
-        <div 
-          className="absolute bottom-[6px] w-[70px] h-[160px] bg-gradient-to-t from-mer-cyan/40 via-mer-cyan/5 to-transparent blur-md"
-          style={{
-            clipPath: 'polygon(15% 100%, 85% 100%, 100% 0%, 0% 0%)',
-            transform: 'translateY(-65px)',
-          }}
-        />
-      </div>
-    </div>
-  );
-}
+
 
 /* ============================================================================
  * 3. ACTIVITY TIMELINE PANEL
@@ -580,27 +515,34 @@ export default function DashboardClient({ data }: DashboardClientProps) {
         </div>
 
         {/* Center Column: Globe Centerpiece */}
-        <div className="relative flex min-h-[380px] flex-col items-center justify-center overflow-hidden lg:col-span-5 bg-[rgba(13,20,35,0.2)] border border-[rgba(77,216,255,0.06)] rounded-2xl">
+        <div 
+          className="relative flex min-h-[380px] flex-col items-center justify-center overflow-hidden lg:col-span-5 bg-[rgba(13,20,35,0.4)] border border-[rgba(77,216,255,0.12)] rounded-2xl"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(77, 216, 255, 0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(77, 216, 255, 0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '24px 24px',
+            backgroundPosition: 'center'
+          }}
+        >
           {/* Subtle backdrop radial glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="h-72 w-72 rounded-full bg-[rgba(77,216,255,0.04)] blur-3xl" />
+            <div className="h-80 w-80 rounded-full bg-[rgba(77,216,255,0.06)] blur-3xl" />
           </div>
 
-          {/* Client Globe */}
-          <div className="relative h-[210px] w-[210px] mx-auto -translate-y-10 z-0">
+          {/* Unified Holographic Globe & Base canvas */}
+          <div className="relative w-full h-[340px] z-0">
             <React.Suspense fallback={null}>
               <ClientGlobe />
             </React.Suspense>
           </div>
 
-          {/* 3D Holographic Platform Base */}
-          <HolographicBase />
-
           {/* Systems status overlay */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full border border-[rgba(52,211,153,0.2)] bg-[rgba(7,12,22,0.85)] px-4 py-1.5 backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-mer-green shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-mer-green">
-              All systems operational
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded border border-[rgba(52,211,153,0.3)] bg-[rgba(7,12,22,0.92)] px-4 py-1.5 backdrop-blur-md shadow-[0_0_15px_rgba(52,211,153,0.1)]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-mer-green shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.22em] text-mer-green">
+              ALL SYSTEMS OPERATIONAL
             </span>
           </div>
         </div>
