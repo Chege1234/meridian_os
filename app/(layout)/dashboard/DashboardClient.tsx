@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { ClientGlobe } from '@/shared/components/ui/ClientGlobe';
+import { askDashboardAi } from './actions';
 
 interface TimelineItem {
   id: string;
@@ -384,7 +385,10 @@ function RadarOscilloscope() {
  * ============================================================================ */
 function AIAssistantPanel() {
   const [query, setQuery] = useState('');
-  
+  const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -392,47 +396,86 @@ function AIAssistantPanel() {
     }
   };
 
-  const handleSend = () => {
-    if (!query.trim()) return;
-    console.log('[AI Assistant Input]', query);
+  const handleSend = async () => {
+    if (!query.trim() || loading) return;
+    const text = query.trim();
     setQuery('');
+    setLoading(true);
+    setError(null);
+
+    const res = await askDashboardAi(text);
+    setLoading(false);
+
+    if (res.success && res.text) {
+      setResponse(res.text);
+    } else {
+      setError(res.error || 'Failed to get AI response.');
+    }
   };
 
   return (
     <div className="relative h-full flex flex-col justify-between p-5 bg-[rgba(13,20,35,0.6)] backdrop-blur-md border border-[var(--mer-border-glow)] rounded-2xl hover:border-[var(--mer-border-hover)] transition-all duration-300">
       
       {/* Header */}
-      <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(77,216,255,0.08)] border border-[rgba(77,216,255,0.2)]">
-          <Sparkles className="h-4 w-4 text-mer-cyan" />
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(77,216,255,0.08)] border border-[rgba(77,216,255,0.2)]">
+            <Sparkles className="h-4 w-4 text-mer-cyan" />
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mer-muted">
+            AI ASSISTANT
+          </span>
         </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mer-muted">
-          AI ASSISTANT
-        </span>
+        {response && (
+          <button
+            onClick={() => { setResponse(null); setError(null); }}
+            className="text-[10px] font-mono text-mer-cyan hover:underline cursor-pointer"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
-      {/* Main row: text and glowing star */}
-      <div className="flex items-center justify-between gap-4 py-2">
-        <p className="text-sm font-medium text-mer-text leading-snug">
-          How can I assist you today, Lewis?
-        </p>
-        
-        {/* Large Glowing 4-Point Star */}
-        <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-mer-cyan/15 to-mer-blue/20 rounded-full blur-xl animate-pulse" />
-          <svg viewBox="0 0 50 50" className="w-11 h-11 text-mer-cyan relative z-10 animate-[spin_30s_linear_infinite]" style={{ filter: 'drop-shadow(0 0 6px rgba(77,216,255,0.6))' }}>
-            <path d="M 25 0 Q 25 25 50 25 Q 25 25 25 50 Q 25 25 0 25 Q 25 25 25 0 Z" fill="currentColor" />
-          </svg>
-        </div>
+      {/* Response Box or Greeting */}
+      <div className="flex-1 flex flex-col justify-center py-2 min-h-[90px]">
+        {loading ? (
+          <div className="flex items-center gap-3 text-mer-cyan text-sm animate-pulse">
+            <Sparkles className="h-4 w-4 animate-spin" />
+            <span className="font-mono text-xs">Querying GLM 5.2 AI engine...</span>
+          </div>
+        ) : error ? (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-2.5 text-xs text-red-400">
+            {error}
+          </div>
+        ) : response ? (
+          <div className="max-h-[120px] overflow-y-auto rounded-lg bg-[rgba(7,12,22,0.7)] p-3 border border-[rgba(77,216,255,0.15)] text-xs text-mer-text leading-relaxed whitespace-pre-wrap">
+            {response}
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm font-medium text-mer-text leading-snug">
+              How can I assist you today, Lewis?
+            </p>
+            
+            {/* Large Glowing 4-Point Star */}
+            <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-mer-cyan/15 to-mer-blue/20 rounded-full blur-xl animate-pulse" />
+              <svg viewBox="0 0 50 50" className="w-10 h-10 text-mer-cyan relative z-10 animate-[spin_30s_linear_infinite]" style={{ filter: 'drop-shadow(0 0 6px rgba(77,216,255,0.6))' }}>
+                <path d="M 25 0 Q 25 25 50 25 Q 25 25 25 50 Q 25 25 0 25 Q 25 25 25 0 Z" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Textarea Form inside glowing container */}
-      <div className="mt-4 flex items-end gap-2">
+      {/* Textarea Form */}
+      <div className="mt-3 flex items-end gap-2">
         <div className="relative flex-1">
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={loading}
             placeholder="Ask Meridian..."
             rows={1}
             className={cn(
@@ -440,7 +483,7 @@ function AIAssistantPanel() {
               'bg-[rgba(7,12,22,0.5)] text-mer-text placeholder:text-mer-muted',
               'border border-[var(--mer-border-glow)]',
               'outline-none focus:border-[var(--mer-border-hover)]',
-              'transition-all duration-200',
+              'transition-all duration-200 disabled:opacity-50',
             )}
             aria-label="Ask Meridian"
           />
@@ -449,7 +492,7 @@ function AIAssistantPanel() {
         {/* Send Button */}
         <button
           onClick={handleSend}
-          disabled={!query.trim()}
+          disabled={!query.trim() || loading}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(77,216,255,0.08)] border border-[var(--mer-border-glow)] text-mer-cyan transition-all hover:bg-[rgba(77,216,255,0.18)] hover:shadow-[0_0_10px_rgba(77,216,255,0.25)] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           aria-label="Send query"
         >

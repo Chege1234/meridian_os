@@ -2,11 +2,14 @@
  * Infrastructure — AI Client Interface
  *
  * Provider-agnostic interface for AI completions.
- * Pluggable architecture supporting OpenAI, Anthropic, and Google Gemini.
+ * Pluggable architecture supporting OpenAI, Anthropic, Google Gemini, and NVIDIA GLM.
  */
+
+import type { CredentialProvider } from '@/domain/entities';
 
 export interface AiCompletionOptions {
   readonly model?: string;
+  readonly provider?: CredentialProvider;
   readonly temperature?: number;
   readonly maxTokens?: number;
   /**
@@ -19,6 +22,7 @@ export interface AiCompletionOptions {
     readonly callType: 'content_generation' | 'internal';
     readonly modelTier?: 'flagship' | 'fast';
     readonly credentialId?: string; // set by resolver on successful call
+    readonly provider?: CredentialProvider;
   };
 }
 

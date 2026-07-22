@@ -34,7 +34,7 @@ import type { AiConversationRepository } from '@/domain/repositories';
 import type { CredentialProvider, CredentialModelTier } from '@/domain/entities';
 import { CredentialRules } from '@/domain/rules';
 
-const PROVIDER_ORDER: CredentialProvider[] = ['openai', 'anthropic', 'google', 'nvidia'];
+const PROVIDER_ORDER: CredentialProvider[] = ['nvidia', 'openai', 'anthropic', 'google'];
 
 // Default retry-after when the provider returns no header (5 minutes)
 const DEFAULT_RATE_LIMIT_RESET_MS = 5 * 60 * 1000;
@@ -56,8 +56,25 @@ export class CredentialResolver implements AiClient {
     const callType = options?.context?.callType ?? 'content_generation';
     const tier: CredentialModelTier = options?.context?.modelTier ?? 'fast';
 
-    // Determine initial provider — defaults to openai
-    const initialProvider: CredentialProvider = 'openai';
+    // Determine initial provider: check options first, then active credentials in DB, fallback to 'nvidia'
+    let initialProvider: CredentialProvider | undefined =
+      options?.context?.provider ?? (options as any)?.provider;
+
+    if (!initialProvider) {
+      try {
+        const all = await this.deps.credentialRepository.findAll();
+        const active = all.filter((c) => c.status === 'active');
+        if (active.length > 0) {
+          active.sort((a, b) => a.priority - b.priority);
+          initialProvider = active[0]?.provider;
+        }
+      } catch {
+        // Fallback to default order
+      }
+    }
+
+    initialProvider = initialProvider ?? 'nvidia';
+
     const providersToTry = this.buildProviderOrder(initialProvider, callType);
 
     let lastError: Error | null = null;
@@ -105,7 +122,30 @@ export class CredentialResolver implements AiClient {
       tier,
     );
 
+    // Fallback if no database credentials exist but environment variable is set
     if (credentials.length === 0) {
+      const envKeyMap: Record<CredentialProvider, string | undefined> = {
+        nvidia: process.env.NVIDIA_API_KEY,
+        openai: process.env.OPENAI_API_KEY,
+        anthropic: process.env.ANTHROPIC_API_KEY,
+        google: process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY,
+      };
+
+      const envKey = envKeyMap[provider];
+      if (envKey) {
+        try {
+          const adapter = createAiClient(provider, envKey);
+          const model = options?.model ?? CredentialRules.getDefaultModel(provider, tier);
+          const response = await adapter.complete(input, { ...options, model });
+          return { type: 'success', response, credentialId: 'env-fallback' };
+        } catch (err: unknown) {
+          return {
+            type: 'failure',
+            error: err instanceof Error ? err : new Error(String(err)),
+          };
+        }
+      }
+
       return {
         type: 'failure',
         error: new Error(`No active credentials for provider "${provider}" tier "${tier}".`),
@@ -141,6 +181,8 @@ export class CredentialResolver implements AiClient {
     credentialId: string,
     _callType: string,
   ): Promise<void> {
+    if (credentialId === 'env-fallback') return;
+
     const message = err instanceof Error ? err.message : String(err);
 
     // Parse HTTP status from adapter error messages (format: "XYZ error: <status> - ...")
