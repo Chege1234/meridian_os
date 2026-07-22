@@ -65,7 +65,12 @@ export class CredentialResolver implements AiClient {
         const all = await this.deps.credentialRepository.findAll();
         const active = all.filter((c) => c.status === 'active');
         if (active.length > 0) {
-          active.sort((a, b) => a.priority - b.priority);
+          // Sort by: lowest priority number first; break ties using PROVIDER_ORDER index
+          // so nvidia (index 0) beats google (index 3) when both have the same priority.
+          active.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            return PROVIDER_ORDER.indexOf(a.provider) - PROVIDER_ORDER.indexOf(b.provider);
+          });
           initialProvider = active[0]?.provider;
         }
       } catch {
