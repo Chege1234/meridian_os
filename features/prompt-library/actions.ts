@@ -23,7 +23,7 @@ import { incrementUsageCount } from './application/IncrementUsageCount';
 import { createPromptSchema, updatePromptSchema } from './schemas';
 import type { CreatePromptSchemaInput, UpdatePromptSchemaInput } from './schemas';
 
-// Helper to authenticate actor and verify write permissions
+// Auth helper
 async function getAuthenticatedActor(requireWrite = false) {
   const authUser = await getAuthUser();
   if (!authUser) {
@@ -81,7 +81,6 @@ export async function getPromptDetailAction(promptId: string) {
   }
 }
 
-
 export async function createPromptAction(rawInput: CreatePromptSchemaInput) {
   try {
     const { actor, supabase } = await getAuthenticatedActor(true);
@@ -101,7 +100,7 @@ export async function createPromptAction(rawInput: CreatePromptSchemaInput) {
 
     return result;
   } catch (err: any) {
-    return { success: false, prompt: undefined, error: err.message };
+    return { success: false, prompt: undefined, error: err.message || 'Failed to create prompt.' };
   }
 }
 
@@ -129,7 +128,7 @@ export async function updatePromptAction(args: {
 
     return result;
   } catch (err: any) {
-    return { success: false, prompt: undefined, error: err.message };
+    return { success: false, prompt: undefined, error: err.message || 'Failed to update prompt.' };
   }
 }
 
@@ -150,7 +149,7 @@ export async function deprecatePromptAction(promptId: string) {
 
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Failed to deprecate prompt.' };
   }
 }
 
@@ -162,6 +161,6 @@ export async function incrementUsageAction(promptId: string) {
     const result = await incrementUsageCount(promptId, { promptRepository });
     return result;
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Failed to increment usage count.' };
   }
 }

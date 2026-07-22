@@ -34,11 +34,13 @@ export function createSupabaseUserRepository(
 
       if (!data) return null;
 
+      const roleObj = Array.isArray(data.roles) ? data.roles[0] : data.roles;
+
       return {
         ...mapToUser(data),
         role: {
-          id: data.roles.id,
-          name: data.roles.name,
+          id: roleObj?.id ?? '',
+          name: roleObj?.name ?? 'viewer',
         },
       };
     },
