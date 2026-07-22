@@ -122,10 +122,19 @@ export class CredentialResolver implements AiClient {
     | { type: 'success'; response: AiCompletionResponse; credentialId: string }
     | { type: 'failure'; error: Error }
   > {
-    const credentials = await this.deps.credentialRepository.findActiveByProviderAndTier(
+    let credentials = await this.deps.credentialRepository.findActiveByProviderAndTier(
       provider,
       tier,
     );
+
+    // If no credentials for the requested tier, try the other tier transparently
+    if (credentials.length === 0) {
+      const otherTier: CredentialModelTier = tier === 'fast' ? 'flagship' : 'fast';
+      credentials = await this.deps.credentialRepository.findActiveByProviderAndTier(
+        provider,
+        otherTier,
+      );
+    }
 
     // Fallback if no database credentials exist but environment variable is set
     if (credentials.length === 0) {

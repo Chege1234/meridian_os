@@ -30,7 +30,8 @@ export async function askDashboardAi(query: string) {
       maxTokens: 1000,
       context: {
         callType: 'internal',
-        modelTier: 'fast',
+        modelTier: 'flagship',
+        provider: 'nvidia',
       },
     });
 
