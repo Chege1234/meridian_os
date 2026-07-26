@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   },
   description:
     'The internal operating system that powers Campus Marketplace operations.',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({
