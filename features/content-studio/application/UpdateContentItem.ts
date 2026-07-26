@@ -43,6 +43,10 @@ export async function updateContentItem(
       body: args.data.body !== undefined ? args.data.body : existing.body,
       status: args.data.status ?? existing.status,
       publishDate: args.data.publishDate !== undefined ? args.data.publishDate : existing.publishDate,
+      generatedByPromptId:
+        args.data.generatedByPromptId !== undefined
+          ? args.data.generatedByPromptId
+          : existing.generatedByPromptId,
     });
 
     if (!updated) {
@@ -54,6 +58,7 @@ export async function updateContentItem(
       contentItemId: updated.id,
       body: updated.body,
       caption: updated.caption,
+      generatedByPromptId: updated.generatedByPromptId,
       authorId: args.data.authorId,
       summary: args.data.versionSummary || 'Content edited',
     });

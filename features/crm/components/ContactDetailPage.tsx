@@ -24,6 +24,7 @@ import {
   Calendar,
   Building,
   User as UserIcon,
+  Megaphone,
 } from 'lucide-react';
 import {
   Button,
@@ -39,6 +40,7 @@ import type { Contact, ContactInteraction, Task } from '@/domain/entities';
 import { TaskBoard } from '@/features/tasks';
 import { updateContactSchema, type UpdateContactSchemaInput } from '../schemas';
 import { getContactDetailAction, updateContactAction } from '../actions';
+import { getCampaignsByContactAction } from '@/features/campaigns/actions';
 import { LogInteractionDialog } from './LogInteractionDialog';
 
 interface ContactDetailPageProps {
@@ -67,6 +69,14 @@ export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
   const contact = detailRes?.success ? detailRes.contact : null;
   const interactions = detailRes?.success ? detailRes.interactions || [] : [];
   const loading = loadingContact;
+
+  const { data: campaignsRes, isLoading: loadingCampaigns } = useQuery({
+    queryKey: ['contact-campaigns', contactId],
+    queryFn: () => getCampaignsByContactAction(contactId),
+    staleTime: 120000,
+  });
+
+  const attachedCampaigns = campaignsRes?.success ? campaignsRes.campaigns || [] : [];
 
   function loadDetail() {
     queryClient.invalidateQueries({ queryKey: ['contact', contactId] });
@@ -321,6 +331,57 @@ export function ContactDetailPage({ contactId }: ContactDetailPageProps) {
           {/* Associated Tasks Board panel */}
           <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-5">
             <TaskBoard contactId={contact.id} contactName={contact.name} />
+          </div>
+
+          {/* Associated Campaigns Panel (G5) */}
+          <div className="rounded-[16px] border border-[var(--mer-border-glow)] bg-[var(--mer-surface)] backdrop-blur-md p-5">
+            <div className="flex items-center justify-between border-b border-[var(--mer-border-glow)] pb-3 mb-4">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-mer-muted flex items-center gap-1.5">
+                <Megaphone className="h-3.5 w-3.5 text-mer-cyan" /> Associated Campaigns
+              </span>
+              <Badge variant="outline" className="text-[10px] border-[var(--mer-border-glow)] text-mer-text">
+                {attachedCampaigns.length}
+              </Badge>
+            </div>
+
+            {loadingCampaigns ? (
+              <div className="text-center py-6 text-xs text-mer-muted">Loading campaigns...</div>
+            ) : attachedCampaigns.length > 0 ? (
+              <div className="space-y-3">
+                {attachedCampaigns.map(({ campaign, role }) => (
+                  <div
+                    key={campaign.id}
+                    className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--mer-border-glow)] bg-[rgba(13,20,35,0.7)] hover:border-[var(--mer-border-hover)] transition-all"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <Link
+                        href={`/campaigns?id=${campaign.id}`}
+                        className="text-xs font-semibold text-mer-text hover:text-mer-cyan truncate block"
+                      >
+                        {campaign.name}
+                      </Link>
+                      <div className="flex items-center gap-2 text-[10px] text-mer-muted">
+                        <span className="capitalize">{campaign.status}</span>
+                        <span>•</span>
+                        <span className="truncate">{campaign.objective}</span>
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="capitalize text-[10px] px-2 py-0.5 border-[rgba(77,216,255,0.3)] bg-[rgba(77,216,255,0.08)] text-mer-cyan"
+                    >
+                      {role}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Megaphone className="h-7 w-7 text-mer-muted/40" />
+                <h4 className="mt-2 text-xs font-semibold text-mer-text">No campaigns attached</h4>
+                <p className="text-[11px] text-mer-muted mt-0.5">Attach this contact from Campaign Center.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

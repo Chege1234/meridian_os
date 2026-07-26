@@ -8,6 +8,7 @@
 import { pgTable, uuid, varchar, text, timestamp, index } from 'drizzle-orm/pg-core';
 import { contentItems } from './content-items';
 import { users } from './users';
+import { prompts } from './prompts';
 
 export const contentVersions = pgTable(
   'content_versions',
@@ -18,6 +19,9 @@ export const contentVersions = pgTable(
       .references(() => contentItems.id),
     body: text('body'),
     caption: text('caption'),
+    generatedByPromptId: uuid('generated_by_prompt_id').references(() => prompts.id, {
+      onDelete: 'set null',
+    }),
     authorId: uuid('author_id')
       .notNull()
       .references(() => users.id),
@@ -29,5 +33,6 @@ export const contentVersions = pgTable(
   (table) => [
     index('idx_content_versions_item_id').on(table.contentItemId),
     index('idx_content_versions_created_at').on(table.createdAt),
+    index('idx_content_versions_generated_by_prompt_id').on(table.generatedByPromptId),
   ],
 );

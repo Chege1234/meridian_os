@@ -21,7 +21,7 @@ import {
 } from '@/infrastructure/supabase/schema';
 
 
-import { eq, and, gte, lte, isNull, sql, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte, isNull, isNotNull, sql, inArray } from 'drizzle-orm';
 import type {
   AnalyticsRepository,
   CampaignPerformanceMetric,
@@ -29,6 +29,7 @@ import type {
   ContentAgingInReview,
   CrmActivitySummary,
   AiUsageCost,
+  ContentPromptAttribution,
 } from '@/domain/repositories';
 
 export function createSupabaseAnalyticsRepository(): AnalyticsRepository {
@@ -393,6 +394,85 @@ export function createSupabaseAnalyticsRepository(): AnalyticsRepository {
         userName: row.userName || 'Unknown',
         credentialLabel: row.credentialLabel,
       }));
+    },
+
+    async getContentByPromptAttribution(
+      dateRange: { startDate: Date; endDate: Date },
+      actorId: string,
+      actorRole: string,
+    ): Promise<ContentPromptAttribution[]> {
+      const isAdmin = actorRole === 'owner' || actorRole === 'admin';
+
+      let whereClause = and(
+        gte(contentItems.createdAt, dateRange.startDate),
+        lte(contentItems.createdAt, dateRange.endDate),
+        isNotNull(contentItems.generatedByPromptId)
+      );
+
+      if (!isAdmin) {
+        whereClause = and(whereClause, isNull(contentItems.deletedAt));
+      }
+
+      const rows = await db
+        .select({
+          promptId: contentItems.generatedByPromptId,
+          promptTitle: prompts.title,
+          status: contentItems.status,
+        })
+        .from(contentItems)
+        .innerJoin(prompts, eq(contentItems.generatedByPromptId, prompts.id))
+        .where(whereClause);
+
+      const promptMap: Record<
+        string,
+        {
+          promptId: string;
+          promptTitle: string;
+          totalGeneratedContent: number;
+          publishedCount: number;
+          funnel: {
+            draft: number;
+            review: number;
+            approved: number;
+            scheduled: number;
+            published: number;
+            archived: number;
+          };
+        }
+      > = {};
+
+      rows.forEach((row) => {
+        const pId = row.promptId!;
+        if (!promptMap[pId]) {
+          promptMap[pId] = {
+            promptId: pId,
+            promptTitle: row.promptTitle,
+            totalGeneratedContent: 0,
+            publishedCount: 0,
+            funnel: {
+              draft: 0,
+              review: 0,
+              approved: 0,
+              scheduled: 0,
+              published: 0,
+              archived: 0,
+            },
+          };
+        }
+
+        promptMap[pId].totalGeneratedContent++;
+        const st = row.status as keyof typeof promptMap[typeof pId]['funnel'];
+        if (st in promptMap[pId].funnel) {
+          promptMap[pId].funnel[st]++;
+        }
+        if (st === 'published') {
+          promptMap[pId].publishedCount++;
+        }
+      });
+
+      return Object.values(promptMap).sort(
+        (a, b) => b.publishedCount - a.publishedCount || b.totalGeneratedContent - a.totalGeneratedContent,
+      );
     },
   };
 }

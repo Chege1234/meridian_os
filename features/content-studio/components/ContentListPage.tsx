@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * Feature Component â€” Content List Page
@@ -8,9 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, PenTool, Plus, Kanban, List, Eye, Trash2, Calendar, FileText, Megaphone, Clock } from 'lucide-react';
+import { Search, PenTool, Plus, Kanban, List, Eye, Trash2, Calendar, FileText, Megaphone, Clock, ArrowLeft } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -78,9 +79,17 @@ export function ContentListPage() {
     }
   }
 
+  const shouldAutoCreate = searchParams.get('create') === 'true';
+
   useEffect(() => {
     loadItems();
   }, [search, statusFilter, platformFilter, prefilledCampaignId]);
+
+  useEffect(() => {
+    if (shouldAutoCreate) {
+      setIsCreateOpen(true);
+    }
+  }, [shouldAutoCreate]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -151,6 +160,20 @@ export function ContentListPage() {
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-mer-text">Content Studio</h1>
           <p className="mt-1 text-sm text-mer-muted">Plan, compose, review and schedule campaign assets.</p>
         </div>
+
+        {prefilledCampaignId && (
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-[rgba(77,216,255,0.3)] bg-[rgba(77,216,255,0.08)]">
+            <div className="flex items-center gap-2 text-xs font-semibold text-mer-text">
+              <Megaphone className="h-4 w-4 text-mer-cyan" />
+              <span>Prefilled for Campaign</span>
+            </div>
+            <Link href={`/campaigns?id=${prefilledCampaignId}`}>
+              <Button size="sm" variant="outline" className="gap-1.5 border-[var(--mer-border-glow)] text-xs text-mer-text h-7">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to Campaign
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           {/* View toggle */}

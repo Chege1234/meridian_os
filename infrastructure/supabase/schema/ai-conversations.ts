@@ -5,7 +5,7 @@
  * Per BR-904, BR-906: AI calls must be logged and costs recorded.
  */
 
-import { pgTable, uuid, varchar, text, jsonb, numeric, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, integer, jsonb, numeric, timestamp, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { prompts } from './prompts';
 import { providerCredentials } from './provider-credentials';
@@ -20,6 +20,7 @@ export const aiConversations = pgTable(
     provider: varchar('provider', { length: 50 }).notNull(), // 'openai' | 'anthropic' | 'google'
     model: varchar('model', { length: 100 }).notNull(),
     promptId: uuid('prompt_id').references(() => prompts.id), // nullable if inline prompt
+    promptVersion: integer('prompt_version').notNull().default(1),
     input: text('input').notNull(),
     response: text('response').notNull(),
     tokenUsage: jsonb('token_usage').$type<{

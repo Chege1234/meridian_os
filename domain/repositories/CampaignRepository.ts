@@ -42,6 +42,7 @@ export interface CampaignRepository {
   attachContact(campaignId: string, contactId: string, role: CampaignContactRole): Promise<void>;
   detachContact(campaignId: string, contactId: string): Promise<void>;
   findContacts(campaignId: string): Promise<{ contact: Contact; role: CampaignContactRole }[]>;
+  findCampaignsByContact(contactId: string): Promise<{ campaign: Campaign; role: CampaignContactRole }[]>;
   
   // Metrics
   recordMetric(

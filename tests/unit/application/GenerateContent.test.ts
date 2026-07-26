@@ -91,6 +91,8 @@ describe('GenerateContent Use Case', () => {
 
     expect(result.success).toBe(true);
     expect(result.text).toContain('topic: Meridian');
+    expect(result.promptId).toBe('prompt-123');
+    expect(result.promptVersion).toBe(2);
 
     // Confirm prompt lookup
     expect(mockPromptRepo.findById).toHaveBeenCalledWith('prompt-123');
@@ -103,6 +105,7 @@ describe('GenerateContent Use Case', () => {
         context: {
           callType: 'content_generation',
           modelTier: 'fast',
+          promptVersion: 2,
         },
       }),
     );

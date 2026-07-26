@@ -22,6 +22,7 @@ import { getCampaignPerformance } from './application/GetCampaignPerformance';
 import { getContentPerformance } from './application/GetContentPerformance';
 import { getCrmActivitySummary } from './application/GetCrmActivitySummary';
 import { getAiUsageCost } from './application/GetAiUsageCost';
+import { getContentByPromptAttribution } from './application/GetContentByPromptAttribution';
 import { createDashboard } from './application/CreateDashboard';
 import { updateDashboardLayout } from './application/UpdateDashboardLayout';
 import { saveReport } from './application/SaveReport';
@@ -166,6 +167,34 @@ export async function getAiUsageCostAction(args: {
         startDate: validatedDates.startDate,
         endDate: validatedDates.endDate,
         provider: args.provider,
+        actorId: actor.id,
+        actorRole: actor.role.name,
+      },
+      { analyticsRepository }
+    );
+
+    return result;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getContentByPromptAttributionAction(args: {
+  startDate: string;
+  endDate: string;
+}) {
+  try {
+    const { actor } = await getAuthenticatedActor(false);
+    const validatedDates = dateRangeSchema.parse({
+      startDate: new Date(args.startDate),
+      endDate: new Date(args.endDate),
+    });
+
+    const analyticsRepository = createSupabaseAnalyticsRepository();
+    const result = await getContentByPromptAttribution(
+      {
+        startDate: validatedDates.startDate,
+        endDate: validatedDates.endDate,
         actorId: actor.id,
         actorRole: actor.role.name,
       },

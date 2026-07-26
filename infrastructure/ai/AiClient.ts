@@ -23,6 +23,7 @@ export interface AiCompletionOptions {
     readonly modelTier?: 'flagship' | 'fast';
     readonly credentialId?: string; // set by resolver on successful call
     readonly provider?: CredentialProvider;
+    readonly promptVersion?: number;
   };
 }
 

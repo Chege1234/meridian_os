@@ -43,6 +43,7 @@ export async function createContentItem(
       contentItemId: newContentItem.id,
       body: newContentItem.body,
       caption: newContentItem.caption,
+      generatedByPromptId: newContentItem.generatedByPromptId,
       authorId: input.authorId,
       summary: 'Initial draft created',
     });

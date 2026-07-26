@@ -16,6 +16,7 @@ export interface AiConversation {
   readonly provider: string;
   readonly model: string;
   readonly promptId: string | null;
+  readonly promptVersion: number;
   readonly input: string;
   readonly response: string;
   readonly tokenUsage: TokenUsage | null;
@@ -30,6 +31,7 @@ export interface CreateAiConversationInput {
   readonly provider: string;
   readonly model: string;
   readonly promptId?: string | null;
+  readonly promptVersion?: number | null;
   readonly input: string;
   readonly response: string;
   readonly tokenUsage?: TokenUsage | null;

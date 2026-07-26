@@ -21,6 +21,7 @@ export const createContentItemSchema = z.object({
   ]),
   caption: z.string().max(4000).optional().nullable(),
   body: z.string().max(50000).optional().nullable(),
+  generatedByPromptId: z.string().uuid().optional().nullable(),
 });
 
 export type CreateContentItemSchemaInput = z.infer<typeof createContentItemSchema>;

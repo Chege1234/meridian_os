@@ -227,6 +227,23 @@ export function createSupabaseCampaignRepository(
         }));
     },
 
+    async findCampaignsByContact(contactId: string): Promise<{ campaign: Campaign; role: CampaignContactRole }[]> {
+      const { data, error } = await supabase
+        .from('campaign_contacts')
+        .select('role, added_at, campaigns(*)')
+        .eq('contact_id', contactId)
+        .order('added_at', { ascending: false });
+
+      if (error || !data) return [];
+
+      return data
+        .filter((row: any) => row.campaigns && !row.campaigns.deleted_at)
+        .map((row: any) => ({
+          campaign: mapToCampaign(row.campaigns),
+          role: row.role,
+        }));
+    },
+
     // Metrics
     async recordMetric(
       campaignId: string,

@@ -610,7 +610,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setIsAttachContentOpen(true)}>
                   <LinkIcon className="h-4 w-4" /> Attach Existing
                 </Button>
-                <Link href={`/content?campaignId=${campaignId}`} passHref>
+                <Link href={`/content?campaignId=${campaignId}&create=true`} passHref>
                   <Button size="sm" className="gap-1">
                     <Plus className="h-4 w-4" /> Create New Content
                   </Button>

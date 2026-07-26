@@ -68,6 +68,13 @@ export interface AiUsageCost {
   readonly credentialLabel?: string | null;
 }
 
+export interface ContentPromptAttribution {
+  readonly promptId: string;
+  readonly promptTitle: string;
+  readonly totalGeneratedContent: number;
+  readonly publishedCount: number;
+  readonly funnel: ContentStatusFunnel;
+}
 
 export interface AnalyticsRepository {
   getCampaignPerformance(
@@ -97,4 +104,10 @@ export interface AnalyticsRepository {
     actorId: string,
     actorRole: string,
   ): Promise<AiUsageCost[]>;
+
+  getContentByPromptAttribution(
+    dateRange: { startDate: Date; endDate: Date },
+    actorId: string,
+    actorRole: string,
+  ): Promise<ContentPromptAttribution[]>;
 }

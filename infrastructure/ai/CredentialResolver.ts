@@ -44,6 +44,7 @@ interface ResolverDependencies {
   readonly conversationRepository: AiConversationRepository;
   readonly userId: string;
   readonly promptId?: string | null;
+  readonly promptVersion?: number | null;
 }
 
 export class CredentialResolver implements AiClient {
@@ -88,7 +89,7 @@ export class CredentialResolver implements AiClient {
       const result = await this.tryProvider(provider, tier, input, options, callType);
       if (result.type === 'success') {
         // Log successful call (BR-904, BR-906)
-        await this.logCall(input, result.response, provider, tier, result.credentialId);
+        await this.logCall(input, result.response, provider, tier, result.credentialId, options);
         return { ...result.response, credentialId: result.credentialId };
       }
       lastError = result.error;
@@ -234,14 +235,17 @@ export class CredentialResolver implements AiClient {
     provider: CredentialProvider,
     tier: CredentialModelTier,
     credentialId: string,
+    options?: AiCompletionOptions,
   ): Promise<void> {
     try {
       const model = CredentialRules.getDefaultModel(provider, tier);
+      const promptVersion = options?.context?.promptVersion ?? this.deps.promptVersion ?? 1;
       await this.deps.conversationRepository.create({
         userId: this.deps.userId,
         provider,
         model,
         promptId: this.deps.promptId ?? null,
+        promptVersion,
         input,
         response: response.text,
         tokenUsage: response.tokenUsage,

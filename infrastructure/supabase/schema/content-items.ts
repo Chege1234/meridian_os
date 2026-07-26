@@ -7,6 +7,7 @@
 
 import { pgTable, uuid, varchar, text, timestamp, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
+import { prompts } from './prompts';
 
 export const contentItems = pgTable(
   'content_items',
@@ -19,6 +20,9 @@ export const contentItems = pgTable(
     body: text('body'), // nullable for longer form
     status: varchar('status', { length: 50 }).notNull().default('draft'), // 'draft' | 'review' | 'approved' | 'scheduled' | 'published' | 'archived'
     publishDate: timestamp('publish_date', { withTimezone: true }),
+    generatedByPromptId: uuid('generated_by_prompt_id').references(() => prompts.id, {
+      onDelete: 'set null',
+    }),
     authorId: uuid('author_id')
       .notNull()
       .references(() => users.id),
@@ -37,5 +41,6 @@ export const contentItems = pgTable(
     index('idx_content_items_campaign_id').on(table.campaignId),
     index('idx_content_items_author_id').on(table.authorId),
     index('idx_content_items_created_at').on(table.createdAt),
+    index('idx_content_items_generated_by_prompt_id').on(table.generatedByPromptId),
   ],
 );

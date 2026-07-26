@@ -77,6 +77,7 @@ export function createSupabaseContentRepository(
           caption: data.caption ?? null,
           body: data.body ?? null,
           status: data.status || 'draft',
+          generated_by_prompt_id: data.generatedByPromptId ?? null,
           author_id: data.authorId,
         })
         .select('*')
@@ -104,6 +105,7 @@ export function createSupabaseContentRepository(
       if (data.body !== undefined) dbData.body = data.body;
       if (data.status !== undefined) dbData.status = data.status;
       if (data.publishDate !== undefined) dbData.publish_date = data.publishDate?.toISOString() || null;
+      if (data.generatedByPromptId !== undefined) dbData.generated_by_prompt_id = data.generatedByPromptId;
       if (data.deletedAt !== undefined) dbData.deleted_at = data.deletedAt?.toISOString() || null;
       if (data.deletedBy !== undefined) dbData.deleted_by = data.deletedBy;
 
@@ -121,6 +123,7 @@ export function createSupabaseContentRepository(
       contentItemId: string;
       body: string | null;
       caption: string | null;
+      generatedByPromptId?: string | null;
       authorId: string;
       summary: string | null;
     }): Promise<ContentVersion> {
@@ -130,6 +133,7 @@ export function createSupabaseContentRepository(
           content_item_id: data.contentItemId,
           body: data.body ?? null,
           caption: data.caption ?? null,
+          generated_by_prompt_id: data.generatedByPromptId ?? null,
           author_id: data.authorId,
           summary: data.summary ?? null,
         })
@@ -203,6 +207,7 @@ function mapToContentItem(row: any): ContentItem {
     body: row.body,
     status: row.status,
     publishDate: row.publish_date ? new Date(row.publish_date) : null,
+    generatedByPromptId: row.generated_by_prompt_id ?? null,
     authorId: row.author_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -217,6 +222,7 @@ function mapToContentVersion(row: any): ContentVersion {
     contentItemId: row.content_item_id,
     body: row.body,
     caption: row.caption,
+    generatedByPromptId: row.generated_by_prompt_id ?? null,
     authorId: row.author_id,
     summary: row.summary,
     createdAt: new Date(row.created_at),

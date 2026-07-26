@@ -3,6 +3,7 @@ import { getCampaignPerformance } from '@/features/analytics/application/GetCamp
 import { getContentPerformance } from '@/features/analytics/application/GetContentPerformance';
 import { getCrmActivitySummary } from '@/features/analytics/application/GetCrmActivitySummary';
 import { getAiUsageCost } from '@/features/analytics/application/GetAiUsageCost';
+import { getContentByPromptAttribution } from '@/features/analytics/application/GetContentByPromptAttribution';
 import type { AnalyticsRepository } from '@/domain/repositories';
 
 describe('Analytics Use Cases', () => {
@@ -158,6 +159,42 @@ describe('Analytics Use Cases', () => {
         'openai',
         'user-123',
         'owner'
+      );
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockResult);
+    });
+  });
+
+  describe('GetContentByPromptAttribution', () => {
+    it('should query prompt attribution metrics and funnel breakdown', async () => {
+      const mockResult = [
+        {
+          promptId: 'prompt-123',
+          promptTitle: 'Headline Generator',
+          totalGeneratedContent: 10,
+          publishedCount: 4,
+          funnel: { draft: 2, review: 2, approved: 1, scheduled: 1, published: 4, archived: 0 },
+        },
+      ];
+
+      const mockAnalyticsRepo = {
+        getContentByPromptAttribution: vi.fn().mockResolvedValue(mockResult),
+      } as unknown as AnalyticsRepository;
+
+      const result = await getContentByPromptAttribution(
+        {
+          startDate: mockStartDate,
+          endDate: mockEndDate,
+          actorId: 'user-123',
+          actorRole: 'admin',
+        },
+        { analyticsRepository: mockAnalyticsRepo },
+      );
+
+      expect(mockAnalyticsRepo.getContentByPromptAttribution).toHaveBeenCalledWith(
+        { startDate: mockStartDate, endDate: mockEndDate },
+        'user-123',
+        'admin',
       );
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockResult);

@@ -327,3 +327,15 @@ export async function recordMetricAction(rawInput: RecordMetricSchemaInput) {
     return { success: false, metric: undefined, error: err.message };
   }
 }
+
+export async function getCampaignsByContactAction(contactId: string) {
+  try {
+    const { supabase } = await getAuthenticatedActor(false);
+    const campaignRepository = createSupabaseCampaignRepository(supabase);
+
+    const campaigns = await campaignRepository.findCampaignsByContact(contactId);
+    return { success: true, campaigns };
+  } catch (err: any) {
+    return { success: false, campaigns: [], error: err.message };
+  }
+}

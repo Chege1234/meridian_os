@@ -30,6 +30,7 @@ export interface ContentRepository {
     contentItemId: string;
     body: string | null;
     caption: string | null;
+    generatedByPromptId?: string | null;
     authorId: string;
     summary: string | null;
   }): Promise<ContentVersion>;

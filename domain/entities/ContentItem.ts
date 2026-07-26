@@ -38,6 +38,7 @@ export interface ContentItem {
   readonly body: string | null;
   readonly status: ContentStatus;
   readonly publishDate: Date | null;
+  readonly generatedByPromptId?: string | null;
   readonly authorId: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -50,6 +51,7 @@ export interface ContentVersion {
   readonly contentItemId: string;
   readonly body: string | null;
   readonly caption: string | null;
+  readonly generatedByPromptId?: string | null;
   readonly authorId: string;
   readonly summary: string | null;
   readonly createdAt: Date;
@@ -67,6 +69,7 @@ export interface CreateContentInput {
   readonly type: ContentType;
   readonly caption?: string | null;
   readonly body?: string | null;
+  readonly generatedByPromptId?: string | null;
   readonly authorId: string;
   readonly status?: ContentStatus;
 }
@@ -79,6 +82,7 @@ export interface UpdateContentInput {
   readonly body?: string | null;
   readonly status?: ContentStatus;
   readonly publishDate?: Date | null;
+  readonly generatedByPromptId?: string | null;
   readonly authorId: string; // The person updating
   readonly versionSummary?: string; // Change summary for the version snapshot
 }

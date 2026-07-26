@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   ChevronLeft,
@@ -24,7 +25,8 @@ import {
   Eye,
   AlertCircle,
   Image,
-  X
+  X,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button, Input, Badge, Card, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui';
 import type { ContentItem, ContentVersion, Prompt, MediaAsset } from '@/domain/entities';
@@ -57,6 +59,7 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
   const [type, setType] = useState('');
   const [caption, setCaption] = useState('');
   const [body, setBody] = useState('');
+  const [generatedByPromptId, setGeneratedByPromptId] = useState<string | null>(null);
   const [versionSummary, setVersionSummary] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -86,6 +89,7 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
         setType(res.contentItem.type);
         setCaption(res.contentItem.caption || '');
         setBody(res.contentItem.body || '');
+        setGeneratedByPromptId(res.contentItem.generatedByPromptId || null);
       } else {
         toast.error(res.error || 'Failed to load details.');
         onClose();
@@ -158,6 +162,7 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
           type: type as any,
           caption,
           body,
+          generatedByPromptId,
           versionSummary: versionSummary.trim() || undefined,
         },
       });
@@ -231,6 +236,9 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
     } else {
       setCaption(aiSuggestion);
     }
+    if (selectedPromptId) {
+      setGeneratedByPromptId(selectedPromptId);
+    }
     toast.success('Applied AI suggestion to editor! Review and save when ready.');
   }
 
@@ -267,6 +275,13 @@ export function ContentEditor({ contentId, onClose }: ContentEditorProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {item?.campaignId && (
+            <Link href={`/campaigns?id=${item.campaignId}`}>
+              <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs border-[var(--mer-border-glow)] text-mer-text">
+                <ArrowLeft className="h-3.5 w-3.5" /> Return to Campaign
+              </Button>
+            </Link>
+          )}
           <Badge className="capitalize text-xs font-semibold py-1 px-2.5">
             Status: {item?.status}
           </Badge>

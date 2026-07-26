@@ -28,6 +28,7 @@ function buildMockAnalyticsRepo(overrides: Partial<AnalyticsRepository> = {}): A
       tasksCompleted: 0,
     }),
     getAiUsageCost: vi.fn().mockResolvedValue([]),
+    getContentByPromptAttribution: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
 }

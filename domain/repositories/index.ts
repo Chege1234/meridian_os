@@ -25,6 +25,7 @@ export type {
   ContentAgingInReview,
   CrmActivitySummary,
   AiUsageCost,
+  ContentPromptAttribution,
 } from './AnalyticsRepository';
 export type {
   MediaRepository,

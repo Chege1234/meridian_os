@@ -33,6 +33,8 @@ interface Result {
   success: boolean;
   text?: string;
   conversationId?: string;
+  promptId?: string;
+  promptVersion?: number;
   error?: string;
 }
 
@@ -54,6 +56,7 @@ export async function generateContent(
     // Resolve the active prompt template text from versions history (or fall back to current prompt)
     const activeVersion = await deps.promptRepository.findActiveByPromptId(input.promptId);
     let promptTemplateText = activeVersion ? activeVersion.prompt : prompt.prompt;
+    const promptVersion = activeVersion ? activeVersion.version : prompt.version;
 
     // 2. Replace variables in template text (e.g. {{topic}})
     let filledPromptText = promptTemplateText;
@@ -73,6 +76,7 @@ export async function generateContent(
       context: {
         callType: 'content_generation', // User-facing content — no cross-provider fallback (BR-1405)
         modelTier: 'fast',
+        promptVersion,
       },
     });
 
@@ -87,6 +91,8 @@ export async function generateContent(
     return {
       success: true,
       text: response.text,
+      promptId: prompt.id,
+      promptVersion,
     };
   } catch (err: any) {
     return {

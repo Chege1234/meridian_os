@@ -49,6 +49,7 @@ export function createSupabaseAiConversationRepository(
           provider: data.provider,
           model: data.model,
           prompt_id: data.promptId ?? null,
+          prompt_version: data.promptVersion ?? 1,
           input: data.input,
           response: data.response,
           token_usage: data.tokenUsage ? {
@@ -79,6 +80,7 @@ function mapToAiConversation(row: any): AiConversation {
     provider: row.provider,
     model: row.model,
     promptId: row.prompt_id,
+    promptVersion: row.prompt_version ? Number(row.prompt_version) : 1,
     input: row.input,
     response: row.response,
     tokenUsage: row.token_usage ? {

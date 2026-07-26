@@ -37,6 +37,7 @@ export const updateContentItemSchema = z.object({
     .optional()
     .nullable(),
   versionSummary: z.string().max(255).optional(),
+  generatedByPromptId: z.string().uuid().optional().nullable(),
 });
 
 export type UpdateContentItemSchemaInput = z.infer<typeof updateContentItemSchema>;
