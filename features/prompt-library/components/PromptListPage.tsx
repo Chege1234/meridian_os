@@ -111,18 +111,6 @@ export function PromptListPage() {
     }
   }
 
-  if (editingPromptId) {
-    return (
-      <PromptEditor
-        promptId={editingPromptId}
-        onClose={() => {
-          setEditingPromptId(null);
-          loadPrompts();
-        }}
-      />
-    );
-  }
-
   const columnHelper = createColumnHelper<Prompt>();
 
   const columns = [
@@ -210,6 +198,18 @@ export function PromptListPage() {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  if (editingPromptId) {
+    return (
+      <PromptEditor
+        promptId={editingPromptId}
+        onClose={() => {
+          setEditingPromptId(null);
+          loadPrompts();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
