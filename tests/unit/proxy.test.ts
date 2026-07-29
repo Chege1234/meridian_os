@@ -56,6 +56,13 @@ describe('Proxy Middleware', () => {
     expect(res.headers?.get('location')).toBeNull();
   });
 
+  it('should allow auth callback route (/auth/callback) to bypass auth', async () => {
+    const req = createMockRequest('/auth/callback?code=123');
+    const res = await proxy(req);
+    expect(res).toBeDefined();
+    expect(res.headers?.get('location')).toBeNull();
+  });
+
   it('should redirect unauthenticated users to /login for protected routes', async () => {
     mockGetUser.mockResolvedValue({
       data: { user: null },

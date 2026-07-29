@@ -6,7 +6,13 @@ import {
   setSessionTokenInCache,
 } from '@/infrastructure/auth';
 
-const PUBLIC_ROUTES = ['/login', '/signup', '/reset-password', '/api/cron'];
+const PUBLIC_ROUTES = [
+  '/login',
+  '/signup',
+  '/reset-password',
+  '/auth/callback',
+  '/api/cron',
+];
 
 /**
  * Meridian OS Proxy
