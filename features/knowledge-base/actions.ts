@@ -6,15 +6,12 @@
  * Secure entrypoint for Client Components to invoke KB Use Cases.
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
   createSupabaseKbCategoryRepository,
   createSupabaseKbArticleRepository,
-  createSupabaseUserRepository,
   createSupabaseActivityLogRepository,
 } from '@/infrastructure/repositories';
-import { canWrite } from '@/domain/rules';
 import { createCategory } from './application/CreateCategory';
 import { moveCategory } from './application/MoveCategory';
 import { createArticle } from './application/CreateArticle';
@@ -32,27 +29,6 @@ import type {
   CreateArticleSchemaInput,
   UpdateArticleSchemaInput,
 } from './schemas';
-
-async function getAuthenticatedActor(requireWrite = false) {
-  const authUser = await getAuthUser();
-  if (!authUser) {
-    throw new Error('Unauthenticated.');
-  }
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') {
-    throw new Error('Unauthorized.');
-  }
-
-  if (requireWrite && !canWrite(actor.role.name)) {
-    throw new Error('Permission denied. Viewers cannot modify data.');
-  }
-
-  return { actor, supabase };
-}
 
 export async function getCategoriesAction() {
   try {

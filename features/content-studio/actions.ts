@@ -7,18 +7,15 @@
  * Enforces server-side authentication and RBAC.
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
   createSupabaseContentRepository,
-  createSupabaseUserRepository,
   createSupabaseActivityLogRepository,
   createSupabasePromptRepository,
   createSupabaseAiConversationRepository,
   createSupabaseProviderCredentialRepository,
 } from '@/infrastructure/repositories';
 import { CredentialResolver } from '@/infrastructure/ai/CredentialResolver';
-import { canWrite } from '@/domain/rules';
 import { createContentItem } from './application/CreateContentItem';
 import { updateContentItem } from './application/UpdateContentItem';
 import { transitionContentStatus } from './application/TransitionContentStatus';
@@ -37,28 +34,6 @@ import type {
   TransitionStatusSchemaInput,
   GenerateContentSchemaInput,
 } from './schemas';
-
-// Helper to authenticate actor and verify write permissions
-async function getAuthenticatedActor(requireWrite = false) {
-  const authUser = await getAuthUser();
-  if (!authUser) {
-    throw new Error('Unauthenticated.');
-  }
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') {
-    throw new Error('Unauthorized.');
-  }
-
-  if (requireWrite && !canWrite(actor.role.name)) {
-    throw new Error('Permission denied. Viewers cannot modify data.');
-  }
-
-  return { actor, supabase };
-}
 
 export async function getContentItemsAction(args: {
   search?: string;

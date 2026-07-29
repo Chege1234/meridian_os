@@ -63,7 +63,9 @@ export class NvidiaAdapter implements AiClient {
         estimatedCost,
       };
     } catch (err: any) {
-      throw new Error(`NVIDIA API error: ${err.message || err}`);
+      const status = err?.status || err?.statusCode || err?.response?.status;
+      const statusPrefix = status ? `${status} - ` : '';
+      throw new Error(`NVIDIA API error: ${statusPrefix}${err.message || err}`);
     }
   }
 

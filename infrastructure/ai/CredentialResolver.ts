@@ -200,9 +200,22 @@ export class CredentialResolver implements AiClient {
 
     const message = err instanceof Error ? err.message : String(err);
 
-    // Parse HTTP status from adapter error messages (format: "XYZ error: <status> - ...")
-    const statusMatch = message.match(/:\s*(\d{3})\s*-/);
-    const status = statusMatch ? parseInt(statusMatch[1]!, 10) : 0;
+    // First try extracting status from structured properties on err object if present
+    let status = 0;
+    if (typeof err === 'object' && err !== null) {
+      const e = err as Record<string, unknown>;
+      if (typeof e.status === 'number') status = e.status;
+      else if (typeof e.statusCode === 'number') status = e.statusCode;
+      else if (e.response && typeof (e.response as Record<string, unknown>).status === 'number') {
+        status = (e.response as Record<string, unknown>).status as number;
+      }
+    }
+
+    // Fallback: parse 4xx/5xx HTTP status code from message string flexibly (e.g. "401", "401 - ", "401 Incorrect API key")
+    if (!status) {
+      const statusMatch = message.match(/(?::\s*|\b)(4\d{2}|5\d{2})\b/);
+      status = statusMatch ? parseInt(statusMatch[1]!, 10) : 0;
+    }
 
     if (status === 401 || status === 403) {
       // Auth failure — disable this credential

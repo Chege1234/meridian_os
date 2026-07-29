@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/infrastructure/supabase';
+import { createServiceClient } from '@/infrastructure/supabase';
 import {
   createSupabaseSopRepository,
   createSupabaseAutomationRepository,
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
 
-    const supabase = await createServerClient();
+    const supabase = createServiceClient();
     const sopRepository = createSupabaseSopRepository(supabase);
     const automationRepository = createSupabaseAutomationRepository(supabase);
     const userRepository = createSupabaseUserRepository(supabase);

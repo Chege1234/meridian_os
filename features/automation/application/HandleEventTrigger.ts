@@ -1,4 +1,4 @@
-import { createServerClient } from '@/infrastructure/supabase';
+import { createServiceClient } from '@/infrastructure/supabase';
 import {
   createSupabaseAutomationRepository,
   createSupabaseUserRepository,
@@ -16,7 +16,7 @@ import { triggerAutomation } from './TriggerAutomation';
  */
 export async function handleEventTrigger(event: string, payload: any): Promise<void> {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceClient();
     const automationRepository = createSupabaseAutomationRepository(supabase);
 
     // Query active automations

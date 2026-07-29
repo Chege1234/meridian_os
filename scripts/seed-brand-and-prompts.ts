@@ -232,11 +232,11 @@ CampusMarket is a student-to-student marketplace for verified .edu.tr students a
         description: 'Generate listing descriptions formatted as a spec sheet without marketing hype.',
         prompt: `You are an AI writing assistant for CampusMarket (formerly Campus Marketplace).
 Create a marketplace listing description for an item with the following details:
-- Item Name: {itemName}
-- Condition: {condition}
-- Key Details: {keyDetails}
-- Price: {price}
-- Currency: {currency} (Note: Currency may be TRY, GBP, or USD. Format it clearly, e.g. $50, 50 TRY, or £50).
+- Item Name: {{itemName}}
+- Condition: {{condition}}
+- Key Details: {{keyDetails}}
+- Price: {{price}}
+- Currency: {{currency}} (Note: Currency may be TRY, GBP, or USD. Format it clearly, e.g. $50, 50 TRY, or £50).
 
 Format the output in a plain, direct, spec-sheet style. Avoid marketing hype, buzzwords, or fabricated urgency. Keep sentences short and declarative. Include standard safety caveats if appropriate.`,
         variables: ['itemName', 'condition', 'keyDetails', 'price', 'currency']
@@ -253,7 +253,7 @@ Example references:
       {
         title: 'Transactional Email Copy',
         description: 'Generate transactional email copy with a clear CTA and minimal fluff.',
-        prompt: `Generate transactional email copy for CampusMarket for the event type: {eventType}.
+        prompt: `Generate transactional email copy for CampusMarket for the event type: {{eventType}}.
 The tone should be direct, minimal, and clear. Model it on the confirmation-email tone, e.g.:
 "Thanks for signing up. Click the button below to verify your email."
 Include exactly one clear Call to Action (CTA). Avoid any promotional or marketing fluff.`,
@@ -272,7 +272,7 @@ Keep the tone plain, direct, and safety-focused.`,
       {
         title: 'SEO Meta Description',
         description: 'Generate sitewide default pattern SEO meta descriptions.',
-        prompt: `Create a search engine optimization (SEO) meta description for the following page topic: {pageTopic}.
+        prompt: `Create a search engine optimization (SEO) meta description for the following page topic: {{pageTopic}}.
 It must match the CampusMarket sitewide default pattern:
 "Buy and sell [items] with verified .edu.tr students and staff across North Cyprus."
 Ensure it is under 160 characters, direct, and includes the location (North Cyprus) and verification (.edu.tr).`,

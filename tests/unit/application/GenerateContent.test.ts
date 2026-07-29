@@ -114,6 +114,37 @@ describe('GenerateContent Use Case', () => {
     expect(mockPromptRepo.incrementUsageCount).toHaveBeenCalledWith('prompt-123');
   });
 
+  it('should substitute variable values for both {{doubleBraces}} and {singleBraces} without leaving literal placeholders', async () => {
+    const singleBraceVersion: PromptVersion = {
+      ...mockActiveVersion,
+      prompt: 'Item: {itemName}, Price: {price}, Category: {{category}}.',
+      variables: ['itemName', 'price', 'category'],
+    };
+    mockPromptRepo.findActiveByPromptId = vi.fn().mockResolvedValue(singleBraceVersion);
+
+    const input = {
+      promptId: 'prompt-123',
+      variables: {
+        itemName: 'Bicycle',
+        price: '$50',
+        category: 'Sports',
+      },
+      userId: 'user-123',
+    };
+
+    const result = await generateContent(input, {
+      promptRepository: mockPromptRepo,
+      aiConversationRepository: mockAiConvRepo,
+      aiClient: mockAiClient,
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockAiClient.complete).toHaveBeenCalledWith(
+      'Item: Bicycle, Price: $50, Category: Sports.',
+      expect.anything(),
+    );
+  });
+
   it('should return error if prompt is deprecated', async () => {
     const deprecatedPrompt = { ...mockPrompt, status: 'deprecated' as const };
     mockPromptRepo.findById = vi.fn().mockResolvedValue(deprecatedPrompt);

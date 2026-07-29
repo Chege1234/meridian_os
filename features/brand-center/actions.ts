@@ -7,15 +7,12 @@
  * Owner/Admin only for mutations (consistent with Settings restriction pattern).
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
-  createSupabaseUserRepository,
   createSupabaseActivityLogRepository,
   createSupabaseBrandAssetRepository,
   createSupabaseBrandGuidelineRepository,
 } from '@/infrastructure/repositories';
-import { canWrite } from '@/domain/rules';
 import { createBrandAsset } from './application/CreateBrandAsset';
 import { updateBrandAsset } from './application/UpdateBrandAsset';
 import { publishBrandGuideline } from './application/PublishBrandGuideline';
@@ -30,27 +27,6 @@ import type {
   UpdateBrandAssetSchemaInput,
   PublishGuidelineSchemaInput,
 } from './schemas';
-
-const ADMIN_ROLES = ['owner', 'admin'];
-
-async function getAuthenticatedActor(requireAdmin = false) {
-  const authUser = await getAuthUser();
-  if (!authUser) throw new Error('Unauthenticated.');
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') throw new Error('Unauthorized.');
-  if (requireAdmin && !ADMIN_ROLES.includes(actor.role.name)) {
-    throw new Error('Permission denied. Brand management requires Admin or Owner role.');
-  }
-  if (!requireAdmin && !canWrite(actor.role.name)) {
-    throw new Error('Permission denied. Viewers cannot modify data.');
-  }
-
-  return { actor, supabase };
-}
 
 // ── Queries ──────────────────────────────────────────
 
@@ -95,7 +71,7 @@ export async function getBrandGuidelinesAction() {
 
 export async function createBrandAssetAction(rawInput: CreateBrandAssetSchemaInput) {
   try {
-    const { actor, supabase } = await getAuthenticatedActor(true);
+    const { actor, supabase } = await getAuthenticatedActor({ requireAdmin: true });
     const input = createBrandAssetSchema.parse(rawInput);
 
     const brandAssetRepository = createSupabaseBrandAssetRepository(supabase);
@@ -116,7 +92,7 @@ export async function updateBrandAssetAction(args: {
   data: UpdateBrandAssetSchemaInput;
 }) {
   try {
-    const { actor, supabase } = await getAuthenticatedActor(true);
+    const { actor, supabase } = await getAuthenticatedActor({ requireAdmin: true });
     const input = updateBrandAssetSchema.parse(args.data);
 
     const brandAssetRepository = createSupabaseBrandAssetRepository(supabase);
@@ -134,7 +110,7 @@ export async function updateBrandAssetAction(args: {
 
 export async function deleteBrandAssetAction(id: string) {
   try {
-    const { actor, supabase } = await getAuthenticatedActor(true);
+    const { actor, supabase } = await getAuthenticatedActor({ requireAdmin: true });
     const repo = createSupabaseBrandAssetRepository(supabase);
     const activityLogRepository = createSupabaseActivityLogRepository(supabase);
 
@@ -158,7 +134,7 @@ export async function deleteBrandAssetAction(id: string) {
 
 export async function publishGuidelineAction(rawInput: PublishGuidelineSchemaInput) {
   try {
-    const { actor, supabase } = await getAuthenticatedActor(true);
+    const { actor, supabase } = await getAuthenticatedActor({ requireAdmin: true });
     const input = publishGuidelineSchema.parse(rawInput);
 
     const brandGuidelineRepository = createSupabaseBrandGuidelineRepository(supabase);

@@ -15,10 +15,8 @@
  *   { success: true, data: T } | { success: false, error: string }
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
-  createSupabaseUserRepository,
   createSupabaseProviderCredentialRepository,
 } from '@/infrastructure/repositories';
 import { CredentialRules } from '@/domain/rules';
@@ -43,20 +41,7 @@ import type { ProviderCredential } from '@/domain/entities';
 // ---------------------------------------------------------------------------
 
 async function getAdminActor() {
-  const authUser = await getAuthUser();
-  if (!authUser) throw new Error('Unauthenticated.');
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') throw new Error('Unauthorized.');
-
-  if (!CredentialRules.canManageCredentials(actor.role.name)) {
-    throw new Error('Permission denied. Only admins and owners may manage AI credentials.');
-  }
-
-  return { actor, supabase };
+  return getAuthenticatedActor({ requireAdmin: true });
 }
 
 function formatError(err: unknown): string {

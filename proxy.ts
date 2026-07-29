@@ -1,8 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import {
+  verifySessionTokenInCache,
+  setSessionTokenInCache,
+} from '@/infrastructure/auth';
 
-const PUBLIC_ROUTES = ['/login', '/signup', '/api/cron'];
+const PUBLIC_ROUTES = ['/login', '/signup', '/reset-password', '/api/cron'];
 
 /**
  * Meridian OS Proxy
@@ -50,9 +54,22 @@ export async function proxy(request: NextRequest) {
     },
   );
 
+  let user = null;
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const token = session?.access_token;
+  if (token) {
+    user = verifySessionTokenInCache(token);
+    if (!user) {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+      if (user) {
+        setSessionTokenInCache(token, user);
+      }
+    }
+  }
 
   /* Redirect unauthenticated users to /login */
   if (!user) {

@@ -254,6 +254,9 @@ export function PromptEditor({ promptId, onClose }: PromptEditorProps) {
                 required
                 disabled={status === 'deprecated'}
               />
+              <p className="text-[11px] text-muted-foreground">
+                Use double curly braces like <code className="font-mono text-xs text-primary">{"{{variable}}"}</code> to insert dynamic placeholders into your prompt.
+              </p>
             </div>
 
             {/* Live variables tags list */}

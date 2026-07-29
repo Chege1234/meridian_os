@@ -8,10 +8,14 @@
 
 import { cache } from 'react';
 import { createClient } from '@/infrastructure/supabase/server';
+import { createSupabaseUserRepository } from '@/infrastructure/repositories';
+import { canWrite } from '@/domain/rules';
+import type { UserWithRole } from '@/domain/entities';
 
 // Global short-lived in-memory caches to eliminate Supabase network overhead on page transitions
 const verifiedUserCache = new Map<string, { user: any; expiresAt: number }>();
 const profileCache = new Map<string, { profile: any; expiresAt: number }>();
+const actorCache = new Map<string, { actor: UserWithRole; expiresAt: number }>();
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 interface SignInResult {
@@ -100,11 +104,21 @@ export async function signOut(): Promise<void> {
     const userId = session?.user?.id;
     if (userId) {
       profileCache.delete(userId);
+      actorCache.delete(userId);
     }
   } catch (err) {
     console.error('Error clearing auth cache on signOut:', err);
   }
   await supabase.auth.signOut();
+}
+
+// Helper to apply React cache() in Next.js runtime, while bypassing it in Vitest node test environments
+// to prevent cross-test React cache pollution across test suite runs.
+function memoizeRequest<T extends (...args: any[]) => any>(fn: T): T {
+  if (process.env.VITEST || process.env.NODE_ENV === 'test') {
+    return fn;
+  }
+  return cache(fn);
 }
 
 /**
@@ -122,7 +136,7 @@ export async function getSession() {
  * Get the current authenticated user from Supabase Auth.
  * Uses a short-lived memory cache to prevent sequential network requests on layout/page renders.
  */
-export const getAuthUser = cache(async (bypassCache = false) => {
+export const getAuthUser = memoizeRequest(async (bypassCache = false) => {
   const supabase = await createClient();
 
   if (bypassCache) {
@@ -166,7 +180,7 @@ export const getAuthUser = cache(async (bypassCache = false) => {
 /**
  * Get the cached user profile with roles, resolving from memory if available.
  */
-export const getCachedUserProfile = cache(async (userId: string, bypassCache = false) => {
+export const getCachedUserProfile = memoizeRequest(async (userId: string, bypassCache = false) => {
   if (bypassCache) {
     const supabase = await createClient();
     const { data } = await supabase
@@ -201,4 +215,89 @@ export const getCachedUserProfile = cache(async (userId: string, bypassCache = f
 
   return data;
 });
+
+export type AuthActorOptions =
+  | {
+      requireWrite?: boolean;
+      requireAdmin?: boolean;
+    }
+  | boolean;
+
+/**
+ * Authenticates the request actor and verifies role permissions.
+ * Uses request-scoped memoization via cache() and a 60s in-memory cache to avoid duplicate PostgREST queries.
+ */
+export const getAuthenticatedActor = memoizeRequest(
+  async (options: AuthActorOptions = false, bypassCache = false) => {
+    const authUser = await getAuthUser(bypassCache);
+    if (!authUser) {
+      throw new Error('Unauthenticated.');
+    }
+
+    const supabase = await createClient();
+    let actor: UserWithRole | null = null;
+    const now = Date.now();
+
+    if (!bypassCache) {
+      const cached = actorCache.get(authUser.id);
+      if (cached && cached.expiresAt > now) {
+        actor = cached.actor;
+      }
+    }
+
+    if (!actor) {
+      const userRepository = createSupabaseUserRepository(supabase);
+      actor = await userRepository.findByIdWithRole(authUser.id);
+
+      if (actor) {
+        actorCache.set(authUser.id, {
+          actor,
+          expiresAt: now + CACHE_TTL_MS,
+        });
+      }
+    }
+
+    if (!actor || actor.status !== 'active') {
+      throw new Error('Unauthorized.');
+    }
+
+    const requireWrite =
+      typeof options === 'boolean' ? options : !!options?.requireWrite;
+    const requireAdmin =
+      typeof options === 'object' && !!options?.requireAdmin;
+
+    if (requireAdmin && !['owner', 'admin'].includes(actor.role.name)) {
+      throw new Error('Permission denied. Admin or Owner role required.');
+    }
+
+    if (requireWrite && !canWrite(actor.role.name)) {
+      throw new Error('Permission denied. Viewers cannot modify data.');
+    }
+
+    return { actor, supabase };
+  },
+);
+
+export function verifySessionTokenInCache(token: string) {
+  const now = Date.now();
+  const cached = verifiedUserCache.get(token);
+  if (cached && cached.expiresAt > now) {
+    return cached.user;
+  }
+  return null;
+}
+
+export function setSessionTokenInCache(token: string, user: any) {
+  verifiedUserCache.set(token, {
+    user,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
+
+export function clearAuthCache() {
+  verifiedUserCache.clear();
+  profileCache.clear();
+  actorCache.clear();
+}
+
 

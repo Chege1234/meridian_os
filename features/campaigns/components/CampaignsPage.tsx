@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * Feature Component â€” Campaigns Page
@@ -91,7 +91,7 @@ export function CampaignsPage() {
   }
 
   const getOwnerName = (ownerId: string) => {
-    const user = users.find((u) => u.id === ownerId);
+    const user = users.find((u: any) => u.id === ownerId);
     return user ? user.fullName : 'Unknown';
   };
 
@@ -243,7 +243,7 @@ export function CampaignsPage() {
           },{
             value: ownerFilter,
             onChange: setOwnerFilter,
-            options: [['all','All Owners'], ...users.map((u) => [u.id, u.fullName])],
+            options: [['all','All Owners'], ...users.map((u: any) => [u.id, u.fullName])],
           }].map((sel, i) => (
             <select
               key={i}

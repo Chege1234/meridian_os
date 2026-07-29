@@ -2,4 +2,16 @@
  * Infrastructure — Auth Barrel
  */
 
-export { signIn, signOut, getSession, getAuthUser, getCachedUserProfile } from './auth-service';
+export {
+  signIn,
+  signOut,
+  getSession,
+  getAuthUser,
+  getCachedUserProfile,
+  getAuthenticatedActor,
+  verifySessionTokenInCache,
+  setSessionTokenInCache,
+  clearAuthCache,
+} from './auth-service';
+export type { AuthActorOptions } from './auth-service';
+

@@ -64,8 +64,8 @@ export async function generateContent(
 
     for (const varName of expectedVariables) {
       const value = input.variables[varName] || '';
-      // Replace all occurrences of {{varName}}
-      const regex = new RegExp(`\\{\\{\\s*${varName}\\s*\\}\\}`, 'g');
+      // Replace all occurrences of {{varName}} or {varName}
+      const regex = new RegExp(`\\{\\{?\\s*${varName}\\s*\\}\\}?`, 'g');
       filledPromptText = filledPromptText.replace(regex, value);
     }
 

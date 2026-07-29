@@ -7,8 +7,7 @@
  * Enforces server-side authentication (BR-001) and RBAC.
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
   createSupabaseAgentRepository,
   createSupabasePromptRepository,
@@ -22,7 +21,6 @@ import {
   createSupabaseProviderCredentialRepository,
 } from '@/infrastructure/repositories';
 import { CredentialResolver } from '@/infrastructure/ai/CredentialResolver';
-import { canWrite } from '@/domain/rules';
 
 // Import use cases
 import { createAgent } from './application/CreateAgent';
@@ -44,28 +42,6 @@ import type {
   UpdateAgentSchemaInput,
   RunAgentSchemaInput,
 } from './schemas/agent';
-
-// Helper to authenticate actor and verify write permissions
-async function getAuthenticatedActor(requireWrite = false) {
-  const authUser = await getAuthUser();
-  if (!authUser) {
-    throw new Error('Unauthenticated.');
-  }
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') {
-    throw new Error('Unauthorized.');
-  }
-
-  if (requireWrite && !canWrite(actor.role.name)) {
-    throw new Error('Permission denied. Viewers cannot modify data.');
-  }
-
-  return { actor, supabase };
-}
 
 export async function getAgentsAction(options?: { status?: string }) {
   try {
@@ -102,7 +78,7 @@ export async function createAgentAction(rawInput: CreateAgentSchemaInput) {
 
 export async function updateAgentAction(args: { id: string; input: UpdateAgentSchemaInput }) {
   try {
-    const { supabase } = await getAuthenticatedActor(true);
+    const { actor, supabase } = await getAuthenticatedActor(true);
     const input = updateAgentSchema.parse(args.input);
 
     const agentRepository = createSupabaseAgentRepository(supabase);
@@ -115,7 +91,7 @@ export async function updateAgentAction(args: { id: string; input: UpdateAgentSc
 
     // Log the activity
     await activityLogRepository.create({
-      userId: (await getAuthUser())!.id,
+      userId: actor.id,
       action: 'agent.update',
       module: 'agents',
       entity: 'agent',

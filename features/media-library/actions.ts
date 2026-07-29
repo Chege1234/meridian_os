@@ -7,16 +7,13 @@
  * Enforces server-side auth (BR-001/002) and RBAC (BR-106).
  */
 
-import { getAuthUser } from '@/infrastructure/auth';
-import { createServerClient } from '@/infrastructure/supabase';
+import { getAuthenticatedActor } from '@/infrastructure/auth';
 import {
   createSupabaseMediaRepository,
   createSupabaseMediaFolderRepository,
-  createSupabaseUserRepository,
   createSupabaseActivityLogRepository,
 } from '@/infrastructure/repositories';
 import { createSupabaseStorageService } from '@/infrastructure/storage/SupabaseStorageService';
-import { canWrite } from '@/domain/rules';
 import { uploadMedia } from './application/UploadMedia';
 import { createFolder } from './application/CreateFolder';
 import { moveMedia } from './application/MoveMedia';
@@ -25,22 +22,6 @@ import { searchMedia } from './application/SearchMedia';
 import { attachMediaToContent } from './application/AttachMediaToContent';
 import { uploadMediaSchema, createFolderSchema, moveMediaSchema } from './schemas';
 import type { UploadMediaSchemaInput, CreateFolderSchemaInput, MoveMediaSchemaInput } from './schemas';
-
-async function getAuthenticatedActor(requireWrite = false) {
-  const authUser = await getAuthUser();
-  if (!authUser) throw new Error('Unauthenticated.');
-
-  const supabase = await createServerClient();
-  const userRepository = createSupabaseUserRepository(supabase);
-  const actor = await userRepository.findByIdWithRole(authUser.id);
-
-  if (!actor || actor.status !== 'active') throw new Error('Unauthorized.');
-  if (requireWrite && !canWrite(actor.role.name)) {
-    throw new Error('Permission denied. Viewers cannot modify data.');
-  }
-
-  return { actor, supabase };
-}
 
 // ── Queries ──────────────────────────────────────────
 

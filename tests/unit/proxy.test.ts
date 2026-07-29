@@ -9,13 +9,16 @@ vi.mock('@supabase/ssr', () => ({
 describe('Proxy Middleware', () => {
   let mockSupabase: any;
   let mockGetUser: any;
+  let mockGetSession: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetUser = vi.fn();
+    mockGetSession = vi.fn().mockResolvedValue({ data: { session: null } });
     mockSupabase = {
       auth: {
         getUser: mockGetUser,
+        getSession: mockGetSession,
       },
     };
     vi.mocked(createServerClient).mockReturnValue(mockSupabase);
@@ -67,6 +70,9 @@ describe('Proxy Middleware', () => {
   });
 
   it('should allow authenticated users to access protected routes', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token-123' } },
+    });
     mockGetUser.mockResolvedValue({
       data: { user: { id: 'user-123' } },
       error: null,

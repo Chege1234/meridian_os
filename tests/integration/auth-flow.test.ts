@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signIn } from '@/infrastructure/auth/auth-service';
 import { createClient } from '@/infrastructure/supabase/server';
 
 vi.mock('@/infrastructure/supabase/server', () => ({
   createClient: vi.fn(),
 }));
+
+import { signIn } from '@/infrastructure/auth/auth-service';
 
 describe('Auth Flow Integration', () => {
   let mockSupabase: any;
@@ -17,6 +17,8 @@ describe('Auth Flow Integration', () => {
       auth: {
         signInWithPassword: vi.fn(),
         signOut: vi.fn(),
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
       },
       from: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
@@ -26,7 +28,7 @@ describe('Auth Flow Integration', () => {
       single: vi.fn().mockReturnThis(),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
+    (createClient as any).mockImplementation(async () => mockSupabase);
   });
 
   it('should successfully sign in active user and write audit logs', async () => {
