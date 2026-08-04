@@ -8,6 +8,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { User, UserWithRole } from '@/domain/entities';
 import type { UserRepository } from '@/domain/repositories';
+import { clearUserAuthCache } from '@/infrastructure/auth/auth-service';
 
 export function createSupabaseUserRepository(
   supabase: SupabaseClient,
@@ -83,6 +84,10 @@ export function createSupabaseUserRepository(
         .select('*')
         .single();
 
+      if (data && (updateData.roleId !== undefined || updateData.status !== undefined)) {
+        clearUserAuthCache(id);
+      }
+
       return data ? mapToUser(data) : null;
     },
 
@@ -95,6 +100,8 @@ export function createSupabaseUserRepository(
           status: 'archived',
         })
         .eq('id', id);
+
+      clearUserAuthCache(id);
     },
   };
 }

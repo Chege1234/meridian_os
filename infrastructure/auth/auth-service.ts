@@ -300,4 +300,15 @@ export function clearAuthCache() {
   actorCache.clear();
 }
 
+/**
+ * Invalidate the profile and actor cache entries for a single user.
+ * Call this immediately after a successful DB write that changes a user's
+ * `role_id` or `status` so that `getAuthenticatedActor` cannot return
+ * stale role/status data for up to the 60 s TTL window.
+ */
+export function clearUserAuthCache(userId: string): void {
+  profileCache.delete(userId);
+  actorCache.delete(userId);
+}
+
 

@@ -12,6 +12,8 @@ export {
   verifySessionTokenInCache,
   setSessionTokenInCache,
   clearAuthCache,
+  clearUserAuthCache,
 } from './auth-service';
+
 export type { AuthActorOptions } from './auth-service';
 

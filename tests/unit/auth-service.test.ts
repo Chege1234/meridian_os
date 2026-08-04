@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createClient } from '@/infrastructure/supabase/server';
+import { createSupabaseUserRepository } from '@/infrastructure/repositories';
 import {
   getAuthUser,
   getAuthenticatedActor,
   verifySessionTokenInCache,
   setSessionTokenInCache,
   clearAuthCache,
+  clearUserAuthCache,
 } from '@/infrastructure/auth';
-import { createClient } from '@/infrastructure/supabase/server';
-import { createSupabaseUserRepository } from '@/infrastructure/repositories';
 
 vi.mock('@/infrastructure/supabase/server', () => ({
   createClient: vi.fn(),
@@ -38,7 +39,8 @@ describe('Auth Service & Actor Caching', () => {
       findByIdWithRole: vi.fn(),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
+    (createClient as any).mockReset();
+    (createClient as any).mockImplementation(async () => mockSupabase);
     (createSupabaseUserRepository as any).mockReturnValue(mockUserRepo);
   });
 
@@ -90,6 +92,48 @@ describe('Auth Service & Actor Caching', () => {
       const result2 = await getAuthenticatedActor(false);
       expect(result2.actor).toEqual(actor);
       expect(mockUserRepo.findByIdWithRole).toHaveBeenCalledTimes(1); // STILL 1 call!
+    });
+
+    it('should invalidate cache for specific user when clearUserAuthCache is called', async () => {
+      const token = 'jwt-token-xyz';
+      const authUser = { id: 'user-456', email: 'editor@company.com' };
+      const actorOriginal = {
+        id: 'user-456',
+        email: 'editor@company.com',
+        status: 'active',
+        role: { id: 'role-editor', name: 'editor' },
+      };
+      const actorUpdated = {
+        id: 'user-456',
+        email: 'editor@company.com',
+        status: 'active',
+        role: { id: 'role-viewer', name: 'viewer' },
+      };
+
+      setSessionTokenInCache(token, authUser);
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: token } },
+      });
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: authUser },
+        error: null,
+      });
+      mockUserRepo.findByIdWithRole.mockResolvedValueOnce(actorOriginal);
+
+      // Warm up cache
+      const res1 = await getAuthenticatedActor(false);
+      expect(res1.actor.role.name).toBe('editor');
+      expect(mockUserRepo.findByIdWithRole).toHaveBeenCalledTimes(1);
+
+      // Invalidate cache for user-456
+      clearUserAuthCache('user-456');
+
+      mockUserRepo.findByIdWithRole.mockResolvedValueOnce(actorUpdated);
+
+      // Next call should bypass cache and fetch updated role
+      const res2 = await getAuthenticatedActor(false);
+      expect(res2.actor.role.name).toBe('viewer');
+      expect(mockUserRepo.findByIdWithRole).toHaveBeenCalledTimes(2);
     });
 
     it('should not leak cache between different user IDs', async () => {
