@@ -7,10 +7,14 @@
  */
 
 import { cache } from 'react';
-import { createClient } from '@/infrastructure/supabase/server';
 import { createSupabaseUserRepository } from '@/infrastructure/repositories';
 import { canWrite } from '@/domain/rules';
 import type { UserWithRole } from '@/domain/entities';
+
+async function getSupabaseClient() {
+  const { createClient } = await import('@/infrastructure/supabase/server');
+  return await createClient();
+}
 
 // Global short-lived in-memory caches to eliminate Supabase network overhead on page transitions
 const verifiedUserCache = new Map<string, { user: any; expiresAt: number }>();
@@ -32,15 +36,17 @@ export async function signIn(
   email: string,
   password: string,
 ): Promise<SignInResult> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseClient();
 
-  const { data: authData, error: authError } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const res = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  if (authError || !authData.user) {
+  const authData = res?.data;
+  const authError = res?.error;
+
+  if (authError || !authData?.user) {
     return {
       success: false,
       error: 'Invalid email or password.',
@@ -108,7 +114,7 @@ export async function signOut(userId?: string, token?: string): Promise<void> {
   }
 
   // 2. Attempt getSession() in an isolated try/catch so a failure does not block cache invalidation or supabase.auth.signOut()
-  const supabase = await createClient();
+  const supabase = await getSupabaseClient();
   try {
     const {
       data: { session },
@@ -185,11 +191,9 @@ function memoizeRequest<T extends (...args: any[]) => any>(fn: T): T {
  * Get the current session.
  */
 export async function getSession() {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+  const supabase = await getSupabaseClient();
+  const res = await supabase.auth.getSession();
+  return res?.data?.session ?? null;
 }
 
 /**
@@ -197,44 +201,51 @@ export async function getSession() {
  * Uses a short-lived memory cache to prevent sequential network requests on layout/page renders.
  */
 export const getAuthUser = memoizeRequest(async (bypassCache = false) => {
-  const supabase = await createClient();
+  const supabase = await getSupabaseClient();
+  if (!supabase || !supabase.auth) return null;
 
-  if (bypassCache) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  if (!bypassCache) {
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const token = sessionRes?.data?.session?.access_token;
+      if (token) {
+        const now = Date.now();
+        const cached = verifiedUserCache.get(token);
+        if (cached && cached.expiresAt > now) {
+          return cached.user;
+        }
+      }
+    } catch {
+      // getSession failed/rejected, fall through to getUser
+    }
+  }
+
+  try {
+    const userRes = await supabase.auth.getUser();
+    const user = userRes?.data?.user;
+    const error = userRes?.error;
+
+    if (error || !user) {
+      return null;
+    }
+
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const token = sessionRes?.data?.session?.access_token;
+      if (token) {
+        verifiedUserCache.set(token, {
+          user,
+          expiresAt: Date.now() + CACHE_TTL_MS,
+        });
+      }
+    } catch {
+      // Ignore cache populating errors
+    }
+
     return user;
-  }
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const token = session?.access_token;
-  if (!token) return null;
-
-  const now = Date.now();
-  const cached = verifiedUserCache.get(token);
-  if (cached && cached.expiresAt > now) {
-    return cached.user;
-  }
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    verifiedUserCache.delete(token);
+  } catch {
     return null;
   }
-
-  verifiedUserCache.set(token, {
-    user,
-    expiresAt: now + CACHE_TTL_MS,
-  });
-
-  return user;
 });
 
 /**
@@ -242,7 +253,7 @@ export const getAuthUser = memoizeRequest(async (bypassCache = false) => {
  */
 export const getCachedUserProfile = memoizeRequest(async (userId: string, bypassCache = false) => {
   if (bypassCache) {
-    const supabase = await createClient();
+    const supabase = await getSupabaseClient();
     const { data } = await supabase
       .from('users')
       .select('full_name, email, avatar, roles(id, name)')
@@ -258,7 +269,7 @@ export const getCachedUserProfile = memoizeRequest(async (userId: string, bypass
     return cached.profile;
   }
 
-  const supabase = await createClient();
+  const supabase = await getSupabaseClient();
   const { data } = await supabase
     .from('users')
     .select('full_name, email, avatar, roles(id, name)')
@@ -294,7 +305,7 @@ export const getAuthenticatedActor = memoizeRequest(
       throw new Error('Unauthenticated.');
     }
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseClient();
     let actor: UserWithRole | null = null;
     const now = Date.now();
 

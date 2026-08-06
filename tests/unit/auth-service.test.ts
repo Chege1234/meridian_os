@@ -11,6 +11,21 @@ import {
   clearUserAuthCache,
 } from '@/infrastructure/auth';
 
+const mockSupabase = {
+  auth: {
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
+    getSession: vi.fn(),
+    getUser: vi.fn(),
+  },
+  from: vi.fn(),
+  select: vi.fn(),
+  update: vi.fn(),
+  insert: vi.fn(),
+  eq: vi.fn(),
+  single: vi.fn(),
+};
+
 vi.mock('@/infrastructure/supabase/server', () => ({
   createClient: vi.fn(),
 }));
@@ -20,28 +35,37 @@ vi.mock('@/infrastructure/repositories', () => ({
 }));
 
 describe('Auth Service & Actor Caching', () => {
-  let mockSupabase: any;
-  let mockUserRepo: any;
+  const mockUserRepo = {
+    findByIdWithRole: vi.fn(),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
     clearAuthCache();
 
-    mockSupabase = {
-      auth: {
-        signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
-        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
-      },
-    };
-
-    mockUserRepo = {
-      findByIdWithRole: vi.fn(),
-    };
-
-    (createClient as any).mockReset();
     (createClient as any).mockImplementation(async () => mockSupabase);
+
+    mockSupabase.from.mockReturnValue(mockSupabase);
+    mockSupabase.select.mockReturnValue(mockSupabase);
+    mockSupabase.update.mockReturnValue(mockSupabase);
+    mockSupabase.insert.mockReturnValue(mockSupabase);
+    mockSupabase.eq.mockReturnValue(mockSupabase);
+    mockSupabase.single.mockResolvedValue({ data: null, error: null });
+
+    mockSupabase.auth.signInWithPassword.mockReset();
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: null, error: null });
+
+    mockSupabase.auth.signOut.mockReset();
+    mockSupabase.auth.signOut.mockResolvedValue({ error: null });
+
+    mockSupabase.auth.getSession.mockReset();
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+
+    mockSupabase.auth.getUser.mockReset();
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    mockUserRepo.findByIdWithRole.mockReset();
+
     (createSupabaseUserRepository as any).mockReturnValue(mockUserRepo);
   });
 

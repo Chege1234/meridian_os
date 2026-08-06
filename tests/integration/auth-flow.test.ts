@@ -1,6 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createClient } from '@/infrastructure/supabase/server';
 
+const mockSupabase = {
+  auth: {
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
+    getSession: vi.fn(),
+    getUser: vi.fn(),
+  },
+  from: vi.fn(),
+  select: vi.fn(),
+  update: vi.fn(),
+  insert: vi.fn(),
+  eq: vi.fn(),
+  single: vi.fn(),
+};
+
 vi.mock('@/infrastructure/supabase/server', () => ({
   createClient: vi.fn(),
 }));
@@ -8,27 +23,31 @@ vi.mock('@/infrastructure/supabase/server', () => ({
 import { signIn } from '@/infrastructure/auth/auth-service';
 
 describe('Auth Flow Integration', () => {
-  let mockSupabase: any;
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSupabase = {
-      auth: {
-        signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
-        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
-      },
-      from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-    };
-
     (createClient as any).mockImplementation(async () => mockSupabase);
+
+    mockSupabase.auth.signInWithPassword.mockReset();
+    mockSupabase.auth.signOut.mockReset();
+    mockSupabase.auth.getSession.mockReset();
+    mockSupabase.auth.getUser.mockReset();
+    mockSupabase.from.mockReset();
+    mockSupabase.select.mockReset();
+    mockSupabase.update.mockReset();
+    mockSupabase.insert.mockReset();
+    mockSupabase.eq.mockReset();
+    mockSupabase.single.mockReset();
+
+    mockSupabase.from.mockReturnValue(mockSupabase);
+    mockSupabase.select.mockReturnValue(mockSupabase);
+    mockSupabase.update.mockReturnValue(mockSupabase);
+    mockSupabase.insert.mockReturnValue(mockSupabase);
+    mockSupabase.eq.mockReturnValue(mockSupabase);
+    mockSupabase.single.mockResolvedValue({ data: null, error: null });
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+    mockSupabase.auth.signOut.mockResolvedValue({ error: null });
   });
 
   it('should successfully sign in active user and write audit logs', async () => {

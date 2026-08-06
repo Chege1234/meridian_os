@@ -26,6 +26,12 @@ describe('Campaign Integration Flow', () => {
     vi.clearAllMocks();
 
     mockSupabase = {
+      auth: {
+        signInWithPassword: vi.fn().mockResolvedValue({ data: null, error: null }),
+        signOut: vi.fn().mockResolvedValue({ error: null }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+      },
       currentTable: '',
       from: vi.fn().mockImplementation((table) => {
         mockSupabase.currentTable = table;
