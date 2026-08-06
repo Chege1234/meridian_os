@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createClient } from '@/infrastructure/supabase/server';
 import { createSupabaseUserRepository } from '@/infrastructure/repositories';
 import {
+  signOut,
   getAuthUser,
   getAuthenticatedActor,
   verifySessionTokenInCache,
@@ -204,6 +205,104 @@ describe('Auth Service & Actor Caching', () => {
       await expect(getAuthenticatedActor({ requireAdmin: true })).rejects.toThrow(
         'Permission denied. Admin or Owner role required.',
       );
+    });
+  });
+
+  describe('signOut() cache invalidation & error resilience', () => {
+    it('should clear all cache entries on normal sign-out', async () => {
+      const token = 'token-signout-1';
+      const user = { id: 'user-signout-1', email: 'user1@example.com' };
+      const actor = {
+        id: 'user-signout-1',
+        email: 'user1@example.com',
+        status: 'active',
+        role: { id: 'r1', name: 'admin' },
+      };
+
+      setSessionTokenInCache(token, user);
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: token, user } },
+      });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user }, error: null });
+      mockUserRepo.findByIdWithRole.mockResolvedValue(actor);
+
+      // Warm up caches
+      await getAuthenticatedActor(false);
+
+      expect(verifySessionTokenInCache(token)).toEqual(user);
+
+      // Sign out
+      await signOut();
+
+      // Caches must be cleared
+      expect(verifySessionTokenInCache(token)).toBeNull();
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+    });
+
+    it('should clear profile and actor caches even if getSession() throws during sign-out', async () => {
+      const token = 'token-fail-1';
+      const user = { id: 'user-fail-1', email: 'fail1@example.com' };
+      const actor = {
+        id: 'user-fail-1',
+        email: 'fail1@example.com',
+        status: 'active',
+        role: { id: 'r1', name: 'admin' },
+      };
+
+      setSessionTokenInCache(token, user);
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: token, user } },
+      });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user }, error: null });
+      mockUserRepo.findByIdWithRole.mockResolvedValue(actor);
+
+      // Warm up cache
+      await getAuthenticatedActor(false);
+
+      // Now force getSession to throw network/auth error during signOut
+      mockSupabase.auth.getSession.mockRejectedValue(new Error('Supabase session timeout'));
+
+      // Perform signOut
+      await signOut();
+
+      // Caches must STILL be invalidated despite getSession error
+      expect(verifySessionTokenInCache(token)).toBeNull();
+
+      // Subsequent getAuthenticatedActor call must fail/refetch because cache was cleared
+      mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+      await expect(getAuthenticatedActor(false)).rejects.toThrow('Unauthenticated.');
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+    });
+
+    it('should unconditionally clear profile and actor caches by userId if provided', async () => {
+      const token = 'token-param-1';
+      const user = { id: 'user-param-1', email: 'param1@example.com' };
+      const actor = {
+        id: 'user-param-1',
+        email: 'param1@example.com',
+        status: 'active',
+        role: { id: 'r1', name: 'admin' },
+      };
+
+      setSessionTokenInCache(token, user);
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: token, user } },
+      });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user }, error: null });
+      mockUserRepo.findByIdWithRole.mockResolvedValue(actor);
+
+      await getAuthenticatedActor(false);
+
+      // Force getSession to throw
+      mockSupabase.auth.getSession.mockRejectedValue(new Error('Auth network down'));
+
+      // Pass userId explicitly to signOut
+      await signOut('user-param-1');
+
+      expect(verifySessionTokenInCache(token)).toBeNull();
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
     });
   });
 });

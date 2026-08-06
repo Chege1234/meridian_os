@@ -23,11 +23,19 @@ export const metadata = {
   title: 'Dashboard — Meridian OS',
 };
 
-export default async function DashboardPage() {
-  const authUser = await getAuthUser();
+interface DashboardPageProps {
+  authUser?: any;
+  profile?: any;
+}
+
+export default async function DashboardPage({
+  authUser: propAuthUser,
+  profile: propProfile,
+}: DashboardPageProps = {}) {
+  const authUser = propAuthUser ?? (await getAuthUser());
   if (!authUser) redirect('/login');
 
-  const profile = await getCachedUserProfile(authUser.id);
+  const profile = propProfile ?? (await getCachedUserProfile(authUser.id));
   
   let name = (profile?.full_name as string) ?? 'there';
   if (name.includes('@') || authUser.email === 'lewiskariuki04@gmail.com') {

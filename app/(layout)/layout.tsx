@@ -5,6 +5,7 @@
  * Uses Server Component to fetch user data, then passes to client layout.
  */
 
+import React from 'react';
 import { redirect } from 'next/navigation';
 import { getAuthUser, getCachedUserProfile } from '@/infrastructure/auth';
 import { AuthenticatedShell } from './AuthenticatedShell';
@@ -44,6 +45,10 @@ export default async function AuthenticatedLayout({
     avatar: (profile?.avatar || null) as string | null,
   };
 
-  return <AuthenticatedShell user={user}>{children}</AuthenticatedShell>;
+  const childrenWithProps = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<any>, { authUser, profile })
+    : children;
+
+  return <AuthenticatedShell user={user}>{childrenWithProps}</AuthenticatedShell>;
 }
 

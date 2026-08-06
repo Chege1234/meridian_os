@@ -89,27 +89,87 @@ export async function signIn(
 }
 
 /**
- * Sign out the current user.
+ * Sign out the current user and invalidate all associated authentication caches.
+ * Accepts optional `userId` or `token` if available from calling context to guarantee
+ * unconditional invalidation even if `getSession()` fails or times out.
  */
-export async function signOut(): Promise<void> {
+export async function signOut(userId?: string, token?: string): Promise<void> {
+  let targetUserId = userId;
+  let targetToken = token;
+
+  let profileActorCleared = false;
+  let verifiedUserCleared = false;
+
+  // 1. Unconditionally clear user-keyed profile and actor caches if userId is provided upfront
+  if (targetUserId) {
+    profileCache.delete(targetUserId);
+    actorCache.delete(targetUserId);
+    profileActorCleared = true;
+  }
+
+  // 2. Attempt getSession() in an isolated try/catch so a failure does not block cache invalidation or supabase.auth.signOut()
   const supabase = await createClient();
   try {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (token) {
-      verifiedUserCache.delete(token);
+
+    if (session?.access_token) {
+      targetToken = session.access_token;
     }
-    const userId = session?.user?.id;
-    if (userId) {
-      profileCache.delete(userId);
-      actorCache.delete(userId);
+    if (session?.user?.id && !targetUserId) {
+      targetUserId = session.user.id;
     }
   } catch (err) {
-    console.error('Error clearing auth cache on signOut:', err);
+    console.error('Error fetching session during signOut:', err);
   }
-  await supabase.auth.signOut();
+
+  // 3. Clear profile and actor caches if userId was resolved via getSession()
+  if (targetUserId && !profileActorCleared) {
+    profileCache.delete(targetUserId);
+    actorCache.delete(targetUserId);
+    profileActorCleared = true;
+  }
+
+  // 4. Clear token-keyed verifiedUserCache if token is available, or matching entries by targetUserId
+  if (targetToken) {
+    verifiedUserCache.delete(targetToken);
+    verifiedUserCleared = true;
+  } else if (targetUserId) {
+    for (const [cachedToken, cachedData] of verifiedUserCache.entries()) {
+      if (cachedData.user?.id === targetUserId) {
+        verifiedUserCache.delete(cachedToken);
+        verifiedUserCleared = true;
+      }
+    }
+  }
+
+  // 5. Fallback cache invalidation if session retrieval failed and no userId was resolved
+  if (!profileActorCleared || !verifiedUserCleared) {
+    if (!profileActorCleared) {
+      profileCache.clear();
+      actorCache.clear();
+      profileActorCleared = true;
+    }
+    if (!verifiedUserCleared) {
+      verifiedUserCache.clear();
+      verifiedUserCleared = true;
+    }
+    console.warn(
+      `signOut: Session retrieval failed or incomplete. Fallback full cache invalidation performed. profile/actor cleared: ${profileActorCleared}, verifiedUserCache cleared: ${verifiedUserCleared}`,
+    );
+  } else {
+    console.log(
+      `signOut: Cache invalidation complete. profile/actor cleared: ${profileActorCleared} for user ${targetUserId}, verifiedUserCache cleared: ${verifiedUserCleared}`,
+    );
+  }
+
+  // 6. Always execute supabase.auth.signOut() regardless of getSession outcome
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.error('Error executing supabase.auth.signOut():', err);
+  }
 }
 
 // Helper to apply React cache() in Next.js runtime, while bypassing it in Vitest node test environments
